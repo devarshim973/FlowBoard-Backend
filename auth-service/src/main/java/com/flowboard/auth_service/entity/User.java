@@ -37,9 +37,6 @@ public class User implements UserDetails {
     @Column(nullable = false, unique = true)
     private String email;
 
-    /* this can be null when using oauth and no one can login to this account as the password
-    can not be null when logging in using username password
-    */
     @Column(nullable = false)
     private String password;
 
@@ -51,13 +48,10 @@ public class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     private PROVIDER provider = PROVIDER.MANUAL;
 
-    /* Default value is false so when user signup account is disabled and will be
-       enabled by after verification of email
-     */
-    private boolean isActive = false;
+    private boolean isActive = true;
 
     public void setActive(boolean isActive) {
-        log.info("Is active " + isActive);
+        log.info("Is active {}", isActive);
         this.isActive = isActive;
     }
 
@@ -66,7 +60,7 @@ public class User implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_"+role.name()));
+        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
 
     @Override
@@ -81,6 +75,6 @@ public class User implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return isActive;
+        return true;
     }
 }

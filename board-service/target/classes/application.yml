@@ -6,7 +6,7 @@ spring:
     name: board-service
 
   datasource:
-    url: jdbc:mysql://localhost:3306/flowboard_db
+    url: jdbc:mysql://localhost:3306/flowboard_boardservice
     username: root
     password: ${db_password}
 

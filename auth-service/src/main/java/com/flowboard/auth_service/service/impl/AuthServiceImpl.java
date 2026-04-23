@@ -7,16 +7,17 @@ import com.flowboard.auth_service.dto.SignupDto;
 import com.flowboard.auth_service.dto.UserDto;
 import com.flowboard.auth_service.entity.User;
 import com.flowboard.auth_service.entity.UserOtp;
-import com.flowboard.auth_service.entity.UserVerification;
 import com.flowboard.auth_service.exception.OtpException;
 import com.flowboard.auth_service.exception.UserNotFoundException;
 import com.flowboard.auth_service.repository.UserOtpRepository;
 import com.flowboard.auth_service.repository.UserRepository;
 import com.flowboard.auth_service.repository.UserVerificationRepository;
-import com.flowboard.auth_service.service.*;
+import com.flowboard.auth_service.service.AuthService;
+import com.flowboard.auth_service.service.JwtService;
+import com.flowboard.auth_service.service.UserOtpService;
+import com.flowboard.auth_service.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -38,24 +39,16 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
     private final BCryptPasswordEncoder passwordEncoder;
     private final JwtService jwtService;
-    private final UserVerificationService userVerificationService;
-    private final EmailService emailService;
     private final UserService userService;
     private final UserOtpService userOtpService;
     private final UserOtpRepository userOtpRepository;
     private final UserVerificationRepository userVerificationRepository;
 
-    @Value("${domain.url}")
-    private String url;
-
     @Override
     public UserDto register(SignupDto signupDto) {
-        /* if user already exist with the same email delete it from both verfication table
-        and user table.
-         */
         Optional<User> userOptional = userRepository.findByEmail(signupDto.getEmail());
-        if(userOptional.isPresent()) {
-            if(userOptional.get().isActive()) {
+        if (userOptional.isPresent()) {
+            if (userOptional.get().isActive()) {
                 throw new UserNotFoundException("User already exist with email " + signupDto.getEmail());
             }
             userRepository.delete(userOptional.get());
@@ -64,17 +57,8 @@ public class AuthServiceImpl implements AuthService {
 
         User user = signupRequestMapper.mapTo(signupDto);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setActive(true);
         User savedUser = userRepository.save(user);
-
-        String token = UUID.randomUUID().toString();
-        UserVerification userVerification = UserVerification.builder()
-                .userId(savedUser.getUserId())
-                .token(token)
-                .build();
-
-        UserVerification saveduserVerification = userVerificationService.save(userVerification);
-
-        emailService.sendVerificationEmail(user.getEmail(), url + "auth/verify/" + saveduserVerification.getToken());
 
         return userResponseMapper.mapTo(savedUser);
     }
@@ -82,20 +66,25 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public String login(LoginDto loginDto) {
         log.info("login service called");
+
+        User user = userRepository.findByEmail(loginDto.getEmail())
+                .orElseThrow(() -> new UserNotFoundException("User not found with email " + loginDto.getEmail()));
+
+        if (!user.isActive()) {
+            user.setActive(true);
+            userRepository.save(user);
+            log.info("Activated disabled user {} during login", loginDto.getEmail());
+        }
+
         Authentication authentication = authenticationManager
-                .authenticate(new UsernamePasswordAuthenticationToken
-                        (loginDto.getEmail(), loginDto.getPassword()));
+                .authenticate(new UsernamePasswordAuthenticationToken(loginDto.getEmail(), loginDto.getPassword()));
         log.info("login successful");
         return jwtService.generateToken(loginDto.getEmail());
     }
 
     @Override
     public void verify(String token) {
-        UserVerification userVerification = userVerificationService.findByToken(token);
-        User user = userService.findById(userVerification.getUserId());
-        userVerificationService.deleteByUserId(user.getUserId());
-        user.setActive(true);
-        userRepository.save(user);
+        throw new UnsupportedOperationException("Email verification flow is disabled. Accounts are activated immediately.");
     }
 
     @Override
@@ -109,24 +98,20 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(() -> new UserNotFoundException("User not found with email " + forgetPasswordDto.getEmail()));
 
         UserOtp userOtp = userOtpRepository.findByUserId(user.getUserId())
-                .orElseThrow(() ->  new OtpException("No otp for user " + user.getUserId()));
+                .orElseThrow(() -> new OtpException("No otp for user " + user.getUserId()));
 
-        if(userOtp.getLastOtpDateTime().plusMinutes(5).isBefore(LocalDateTime.now())) {
+        if (userOtp.getLastOtpDateTime().plusMinutes(5).isBefore(LocalDateTime.now())) {
             throw new OtpException("OTP expired");
         }
 
-        if(!Objects.equals(userOtp.getUserId(), user.getUserId())) {
+        if (!Objects.equals(userOtp.getUserId(), user.getUserId())) {
             throw new OtpException("Internal error try resending otp");
         }
 
-        if(!userOtp.getOtp().equals(forgetPasswordDto.getOtp())) {
+        if (!userOtp.getOtp().equals(forgetPasswordDto.getOtp())) {
             throw new OtpException("Invalid otp");
         }
 
-        /*
-         reset the otp to a random very large otp so the user cannot user the same
-         otp to change the password again
-        */
         userOtp.setOtp(UUID.randomUUID().toString());
         user.setPassword(passwordEncoder.encode(forgetPasswordDto.getNewPassword()));
         userRepository.save(user);

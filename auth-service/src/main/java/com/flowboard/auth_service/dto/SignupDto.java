@@ -1,5 +1,6 @@
 package com.flowboard.auth_service.dto;
 
+import com.flowboard.auth_service.entity.ROLE;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -18,9 +19,16 @@ public class SignupDto {
     @Email(message = "Enter a valid email address")
     private String email;
 
-    @Schema(description = "Password (min 8 chars, 1 uppercase, 1 lowercase, 1 digit, 1 special char)",
-            example = "Password@1")
-    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$",
-    message = "Password must contain 1 lowercase, 1 uppercase, 1 digit, size 8")
+    @Schema(
+            description = "Password (min 8 chars, 1 uppercase, 1 lowercase, 1 digit, 1 special char)",
+            example = "Password@1"
+    )
+    @Pattern(
+            regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$",
+            message = "Password must contain 1 lowercase, 1 uppercase, 1 digit, 1 special character, and be at least 8 characters long"
+    )
     private String password;
+
+    @Schema(description = "User role", example = "MEMBER")
+    private ROLE role = ROLE.MEMBER;
 }

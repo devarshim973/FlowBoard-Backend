@@ -5,67 +5,47 @@ import com.flowboard.notification_service.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class EmailServiceImpl implements EmailService {
-    @Value("${brevo.api-key}")
-    private String apiKey;
-
-    @Value("${brevo.sender.email}")
+    @Value("${spring.mail.username:}")
     private String senderEmail;
 
-    @Value("${brevo.sender.name}")
+    @Value("${app.mail.sender-name:FlowBoard}")
     private String senderName;
 
-    private final RestTemplate restTemplate;
+    private final JavaMailSender mailSender;
 
     @Override
     public void send(String toEmail, String subject, String htmlContent) {
-
-        String url = "https://api.brevo.com/v3/smtp/email";
-
-        Map<String, Object> body = new HashMap<>();
-
-        body.put("sender", Map.of(
-                "email", senderEmail,
-                "name", senderName
-        ));
-
-        body.put("to", List.of(
-                Map.of("email", toEmail)
-        ));
-
-        body.put("subject", subject);
-        body.put("htmlContent", htmlContent);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("api-key", apiKey);
-
-        HttpEntity<Map<String, Object>> request =
-                new HttpEntity<>(body, headers);
+        if (senderEmail == null || senderEmail.isBlank()) {
+            log.warn("SMTP is not configured yet. Skipping email to {}", toEmail);
+            return;
+        }
 
         try {
-            ResponseEntity<String> response =
-                    restTemplate.postForEntity(url, request, String.class);
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            log.info("Brevo Status: {}", response.getStatusCode());
-            log.info("Brevo Body: {}", response.getBody());
+            helper.setFrom(senderEmail, senderName);
+            helper.setTo(toEmail);
+            helper.setSubject(subject);
+            helper.setText(htmlContent, true);
 
+            mailSender.send(message);
+            log.info("SMTP mail sent successfully to {}", toEmail);
+        } catch (MessagingException | java.io.UnsupportedEncodingException e) {
+            log.error("SMTP mail preparation failed for {}: {}", toEmail, e.getMessage(), e);
         } catch (Exception e) {
-            log.error("Brevo Error: {}", e.getMessage());
+            log.error("SMTP mail sending failed for {}: {}", toEmail, e.getMessage(), e);
         }
     }
 

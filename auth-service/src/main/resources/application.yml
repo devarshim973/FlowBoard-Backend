@@ -6,6 +6,18 @@ spring:
   application:
     name: auth-service
 
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
   datasource:
     url: jdbc:mysql://localhost:3306/flowboard_auth
     username: root
@@ -38,11 +50,9 @@ security:
   jwt:
     secret: ${jwt-secret-key}
 
-brevo:
-  api-key: ${brevo-api-key}
-  sender:
-    email: ${brevo-sender-mail}
-    name: FlowBoard
+app:
+  mail:
+    sender-name: FlowBoard
 
 domain:
   url: "http://localhost:8081/api/v1/"

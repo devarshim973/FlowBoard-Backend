@@ -66,9 +66,7 @@ public class BoardController {
         return ResponseEntity.ok(boardService.getPublicBoardsForWorkspace(workspaceId, page, size, by, direction));
     }
 
-    /*
-    Return public board of private workspace(if user is member)
-     */
+
     @GetMapping("/workspace/{workspaceId}/member/public")
     public ResponseEntity<CustomPageResponse<BoardResponseDto>> getPublicBoardsForUser(
             @PathVariable Integer workspaceId,

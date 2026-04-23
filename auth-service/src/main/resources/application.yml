@@ -1,3 +1,7 @@
+server:
+  port: 8081
+  forward-headers-strategy: framework
+
 spring:
   application:
     name: auth-service
@@ -20,6 +24,16 @@ spring:
     hibernate:
       ddl-auto: update
 
+  management:
+    endpoints:
+      web:
+        exposure:
+          include: "*"
+
+    endpoint:
+      health:
+        show-details: always
+
 security:
   jwt:
     secret: ${jwt-secret-key}
@@ -31,4 +45,13 @@ brevo:
     name: FlowBoard
 
 domain:
-  url: "http://localhost:8080/api/v1/"
+  url: "http://localhost:8081/api/v1/"
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true

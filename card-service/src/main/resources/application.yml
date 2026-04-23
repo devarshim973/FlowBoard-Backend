@@ -20,11 +20,6 @@ spring:
     username: guest
     password: guest
 
-  boot:
-    admin:
-      client:
-        url: http://localhost:9090
-
   management:
     endpoints:
       web:

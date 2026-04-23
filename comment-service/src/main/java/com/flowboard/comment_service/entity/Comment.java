@@ -31,9 +31,6 @@ public class Comment {
     @Column(nullable = false)
     private Boolean isDeleted = false;
 
-    /*
-    can be null for top level comment and also only supports 2 level of nesting
-     */
     private Integer parentCommentId;
 
     @CreationTimestamp

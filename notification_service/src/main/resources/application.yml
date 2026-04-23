@@ -6,7 +6,7 @@ spring:
     name: notification-service
 
   datasource:
-    url: jdbc:mysql://localhost:3306/flow_board_notification_service_db
+    url: jdbc:mysql://localhost:3306/flowboard_auth
     username: root
     password: ${db_password}
 

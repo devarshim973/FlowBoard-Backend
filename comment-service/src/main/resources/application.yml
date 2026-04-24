@@ -6,9 +6,9 @@ spring:
     name: comment-service
 
   datasource:
-    url: jdbc:mysql://localhost:3306/flowboard_commentservice
+    url: jdbc:mysql://localhost:3306/flowboard_commentservice?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Kolkata
     username: root
-    password: ${db_password}
+    password: ${db_password:}
 
   jpa:
     hibernate:
@@ -22,7 +22,7 @@ spring:
 
 security:
   jwt:
-    secret: ${jwt-secret-key}
+    secret: ${jwt-secret-key:SgTifEpe13grqWciFLlD4V+z5TXO3dkS9SvKXkDi6JA=}
 
 eureka:
   client:
@@ -42,6 +42,6 @@ rabbitmq:
     key: notification-key
 
 cloudinary:
-  cloud-name: ${cloudinary-cloud-name}
-  api-key: ${cloudinary-api-key}
-  api-secret: ${cloudinary-api-secret}
+  cloud-name: ${cloudinary-cloud-name:}
+  api-key: ${cloudinary-api-key:}
+  api-secret: ${cloudinary-api-secret:}

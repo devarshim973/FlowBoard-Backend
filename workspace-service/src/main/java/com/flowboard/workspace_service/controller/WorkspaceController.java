@@ -57,4 +57,19 @@ public class WorkspaceController {
         Integer ownerId = getUserId(request);
         return ResponseEntity.ok(workspaceService.getMyWorkspaces(ownerId, page, size, by, direction));
     }
+
+    @GetMapping("/owner/{id}")
+    public ResponseEntity<Integer> handleGetOwnerId(@PathVariable Integer id) {
+        return ResponseEntity.ok(workspaceService.getOwnerId(id));
+    }
+
+    @GetMapping("/{workspaceId}/member/{memberId}")
+    public ResponseEntity<Boolean> handleIsMember(@PathVariable Integer workspaceId, @PathVariable Integer memberId) {
+        return ResponseEntity.ok(workspaceService.isMember(workspaceId, memberId));
+    }
+
+    @GetMapping("/private/{workspaceId}")
+    public ResponseEntity<Boolean> handleIsPrivate(@PathVariable Integer workspaceId) {
+        return ResponseEntity.ok(workspaceService.isPrivate(workspaceId));
+    }
 }

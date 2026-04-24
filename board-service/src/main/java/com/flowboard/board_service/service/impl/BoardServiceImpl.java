@@ -212,6 +212,16 @@ public class BoardServiceImpl implements BoardService {
         boardRepository.save(board);
     }
 
+    @Override
+    public Integer getWorkspaceId(Integer boardId) {
+        return getBoard(boardId).getWorkspaceId();
+    }
+
+    @Override
+    public Boolean isPrivate(Integer boardId) {
+        return getBoard(boardId).getVisibility().equals(Visibility.PRIVATE);
+    }
+
     private Board getBoard(Integer id) {
         return boardRepository.findById(id)
                 .orElseThrow(() -> new BoardNotFoundException("Board not found with id " + id.toString()));

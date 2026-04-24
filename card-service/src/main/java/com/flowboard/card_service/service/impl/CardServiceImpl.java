@@ -68,7 +68,9 @@ public class CardServiceImpl implements CardService {
         Integer assigneeId = card.getAssigneeId();
 
         validateModificationRequest(boardId, userId);
-        validateModificationRequest(boardId, assigneeId);
+        if(assigneeId != null) {
+            validateModificationRequest(boardId, assigneeId);
+        }
 
         Integer lastPosition = getMaxPosition(listId);
 
@@ -253,7 +255,9 @@ public class CardServiceImpl implements CardService {
         Integer boardId = card.getBoardId();
 
         validateModificationRequest(boardId, userId);
-        validateModificationRequest(assigneeId, userId);
+        if(assigneeId != null) {
+            validateModificationRequest(boardId, assigneeId);
+        }
 
         card.setAssigneeId(assigneeId);
 

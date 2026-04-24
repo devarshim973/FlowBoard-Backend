@@ -19,36 +19,34 @@ spring:
             enable: true
 
   datasource:
-    url: jdbc:mysql://localhost:3306/flowboard_auth
+    url: jdbc:mysql://localhost:3306/flowboard_auth?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Kolkata
     username: root
-    password: ${db_password}
+    password: ${db_password:}
 
   security:
     oauth2:
       client:
         registration:
           google:
-            client-id: ${google_client_id}
-            client-secret: ${google_client_secret}
-
+            client-id: ${google_client_id:}
+            client-secret: ${google_client_secret:}
 
   jpa:
     hibernate:
       ddl-auto: update
 
-  management:
-    endpoints:
-      web:
-        exposure:
-          include: "*"
-
-    endpoint:
-      health:
-        show-details: always
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
 
 security:
   jwt:
-    secret: ${jwt-secret-key}
+    secret: ${jwt-secret-key:SgTifEpe13grqWciFLlD4V+z5TXO3dkS9SvKXkDi6JA=}
 
 app:
   mail:

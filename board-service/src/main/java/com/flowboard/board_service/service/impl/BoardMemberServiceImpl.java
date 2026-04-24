@@ -121,7 +121,8 @@ public class BoardMemberServiceImpl implements BoardMemberService {
         return new CustomPageResponse<>(userIdPage, userDtos);
     }
 
-    private boolean isMember(Integer userId, Integer boardId) {
+    @Override
+    public Boolean isMember(Integer boardId, Integer userId) {
         return boardMemberRepository.existsByBoardIdAndUserId(boardId, userId);
     }
 

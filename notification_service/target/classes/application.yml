@@ -18,9 +18,9 @@ spring:
             enable: true
 
   datasource:
-    url: jdbc:mysql://localhost:3306/flowboard_notificationservice
+    url: jdbc:mysql://localhost:3306/flowboard_notificationservice?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Kolkata
     username: root
-    password: ${db_password}
+    password: ${db_password:}
 
   jpa:
     hibernate:
@@ -28,7 +28,7 @@ spring:
 
 security:
   jwt:
-    secret: ${jwt-secret-key}
+    secret: ${jwt-secret-key:SgTifEpe13grqWciFLlD4V+z5TXO3dkS9SvKXkDi6JA=}
 
 app:
   mail:

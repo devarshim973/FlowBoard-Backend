@@ -6,9 +6,9 @@ spring:
     name: list-service
 
   datasource:
-    url: jdbc:mysql://localhost:3306/flowboard_listservice
+    url: jdbc:mysql://localhost:3306/flowboard_listservice?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Kolkata
     username: root
-    password: ${db_password}
+    password: ${db_password:}
 
   jpa:
     hibernate:

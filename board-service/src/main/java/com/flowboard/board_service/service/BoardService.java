@@ -44,5 +44,9 @@ public interface BoardService {
 
     public void openBoard(Integer boardId, Integer userId);
 
+    Integer getWorkspaceId(Integer boardId);
+
+    Boolean isPrivate(Integer boardId);
+
     // public CustomPageResponse<BoardResponseDto> getPublicBoardsForWorkspace(Integer workspaceId, Integer userId);
 }

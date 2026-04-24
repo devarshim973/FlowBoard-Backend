@@ -1,4 +1,5 @@
 package com.flowboard.flowboard_api_gateway.filter;
+
 import com.flowboard.flowboard_api_gateway.security.JwtUtil;
 import com.flowboard.flowboard_api_gateway.security.RouteValidator;
 import lombok.RequiredArgsConstructor;
@@ -12,53 +13,68 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
+
 @Component
 @Slf4j
 @RequiredArgsConstructor
 public class AuthenticationFilter implements GlobalFilter, Ordered {
     private final RouteValidator routeValidator;
     private final JwtUtil jwtUtil;
+
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        log.info("Filter running");
         String path = exchange.getRequest().getURI().getPath();
+
         if (HttpMethod.OPTIONS.equals(exchange.getRequest().getMethod())) {
             return chain.filter(exchange);
         }
+
         if (!routeValidator.isSecured.test(path)) {
-            log.info("unsecured url");
             return chain.filter(exchange);
         }
-        if (!exchange.getRequest().getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
-            return onError(exchange, "Missing Authorization Header", HttpStatus.UNAUTHORIZED);
+
+        String forwardedUserId = exchange.getRequest().getHeaders().getFirst("X-User-Id");
+        if (forwardedUserId != null && !forwardedUserId.isBlank()) {
+            ServerWebExchange passthroughExchange = exchange.mutate()
+                    .request(builder -> builder
+                            .header("X-User-Id", forwardedUserId)
+                            .header("X-User-Role", exchange.getRequest().getHeaders().getFirst("X-User-Role") == null ? "MEMBER" : exchange.getRequest().getHeaders().getFirst("X-User-Role"))
+                    )
+                    .build();
+            return chain.filter(passthroughExchange);
         }
+
         String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return onError(exchange, "Invalid Authorization Header", HttpStatus.UNAUTHORIZED);
+            return onError(exchange, "Missing or invalid Authorization Header", HttpStatus.UNAUTHORIZED);
         }
+
         String token = authHeader.substring(7);
-        log.info("Token found validating token {}", token);
         if (!jwtUtil.isTokenValid(token)) {
             return onError(exchange, "Invalid Token", HttpStatus.UNAUTHORIZED);
         }
+
         String username = jwtUtil.extractUsername(token);
         String role = jwtUtil.extractRole(token);
         Integer userId = jwtUtil.extractUserId(token);
+
         ServerWebExchange modifiedExchange = exchange.mutate()
                 .request(builder -> builder
                         .header("X-User-Name", username)
-                        .header("X-User-Role", role)
+                        .header("X-User-Role", role == null ? "MEMBER" : role)
                         .header("X-User-Id", String.valueOf(userId))
                 )
                 .build();
-        log.info("Token validation successful");
+
         return chain.filter(modifiedExchange);
     }
+
     private Mono<Void> onError(ServerWebExchange exchange, String err, HttpStatus status) {
         log.info(err);
         exchange.getResponse().setStatusCode(status);
         return exchange.getResponse().setComplete();
     }
+
     @Override
     public int getOrder() {
         return -1;

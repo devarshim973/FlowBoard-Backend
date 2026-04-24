@@ -51,4 +51,9 @@ public class BoardMemberController {
 
         return ResponseEntity.ok(boardMemberService.getMembers(boardId, userId, page, size, by, direction));
     }
+
+    @GetMapping("/{boardId}/is-member/{userId}")
+    public ResponseEntity<Boolean> isMember(@PathVariable Integer boardId, @PathVariable Integer userId) {
+        return ResponseEntity.ok(boardMemberService.isMember(boardId, userId));
+    }
 }

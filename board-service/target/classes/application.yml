@@ -6,9 +6,9 @@ spring:
     name: board-service
 
   datasource:
-    url: jdbc:mysql://localhost:3306/flowboard_boardservice
+    url: jdbc:mysql://localhost:3306/flowboard_boardservice?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Kolkata
     username: root
-    password: ${db_password}
+    password: ${db_password:}
 
   jpa:
     hibernate:

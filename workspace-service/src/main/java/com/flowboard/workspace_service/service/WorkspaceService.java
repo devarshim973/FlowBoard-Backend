@@ -17,4 +17,10 @@ public interface WorkspaceService {
                                                                     Integer size,
                                                                     String by,
                                                                     String direction);
+
+    Integer getOwnerId(Integer workspaceId);
+
+    Boolean isMember(Integer workspaceId, Integer memberId);
+
+    Boolean isPrivate(Integer workspaceId);
 }

@@ -1,27 +1,34 @@
 package com.flowboard.auth_service.service.impl;
 
+import com.flowboard.auth_service.entity.User;
+import com.flowboard.auth_service.repository.UserRepository;
 import com.flowboard.auth_service.service.JwtService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
-import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
-import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class JwtServiceImpl implements JwtService {
     @Value("${security.jwt.secret}")
     private String secretKey;
 
-    private SecretKey getKey(){
+    private final UserRepository userRepository;
+
+    public JwtServiceImpl(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    private SecretKey getKey() {
         byte[] keyBytes = Base64.getDecoder().decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }
@@ -35,8 +42,7 @@ public class JwtServiceImpl implements JwtService {
     private boolean isTokenExpired(String token) {
         try {
             return extractExpiration(token).before(new Date());
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             throw new AccessDeniedException("Expired token");
         }
     }
@@ -59,18 +65,25 @@ public class JwtServiceImpl implements JwtService {
                     .build()
                     .parseSignedClaims(token)
                     .getPayload();
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             throw new AccessDeniedException("Invalid token");
         }
     }
 
     @Override
     public String generateToken(String username) {
+        User user = userRepository.findByEmail(username)
+                .orElseThrow(() -> new AccessDeniedException("User not found for token generation"));
+
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", user.getUserId());
+        claims.put("role", user.getRole().name());
+
         return Jwts.builder()
+                .claims(claims)
                 .subject(username)
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + 1000*60*60*24))
+                .expiration(new Date(System.currentTimeMillis() + 1000L * 60 * 60 * 24))
                 .signWith(getKey())
                 .compact();
     }

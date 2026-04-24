@@ -1,15 +1,20 @@
 server:
   port: 8080
+
 spring:
   application:
     name: api-gateway
+
   cloud:
     gateway:
       globalcors:
         cors-configurations:
           '[/**]':
-            allowedOrigins:
+            allowedOriginPatterns:
               - http://localhost:5173
+              - http://localhost:5174
+              - http://127.0.0.1:5173
+              - http://127.0.0.1:5174
             allowedMethods:
               - GET
               - POST
@@ -27,34 +32,42 @@ spring:
           uri: lb://auth-service
           predicates:
             - Path=/api/v1/auth/**
+
         - id: user-service
           uri: lb://auth-service
           predicates:
             - Path=/api/v1/user/**
+
         - id: workspace-service
           uri: lb://workspace-service
           predicates:
             - Path=/api/v1/workspaces/**
+
         - id: board-service
           uri: lb://board-service
           predicates:
             - Path=/api/v1/boards/**,/api/v1/board-members/**
+
         - id: list-service
           uri: lb://list-service
           predicates:
             - Path=/api/v1/lists/**
+
         - id: card-service
           uri: lb://card-service
           predicates:
             - Path=/api/v1/cards/**
+
         - id: comment-service
           uri: lb://comment-service
           predicates:
             - Path=/api/v1/comments/**,/api/v1/attachments/**
+
         - id: notification-service
           uri: lb://notification-service
           predicates:
             - Path=/api/v1/notifications/**
+
 eureka:
   client:
     service-url:
@@ -63,6 +76,7 @@ eureka:
     fetch-registry: true
   instance:
     prefer-ip-address: true
+
 security:
   jwt:
-    secret: q1UtDkiy1WxTyPgolR+Jqm+x9Def+wyvzDHzRCWQaA4=
+    secret: SgTifEpe13grqWciFLlD4V+z5TXO3dkS9SvKXkDi6JA=

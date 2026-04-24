@@ -19,4 +19,6 @@ public interface BoardMemberService {
             String sort,
             String direction
     );
+
+    Boolean isMember(Integer boardId, Integer userId);
 }

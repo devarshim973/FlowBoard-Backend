@@ -90,6 +90,21 @@ public class WorkspaceServiceImpl implements WorkspaceService {
         return new CustomPageResponse<>(workspaceResponseDtoPage);
     }
 
+    @Override
+    public Integer getOwnerId(Integer workspaceId) {
+        return getWorkspace(workspaceId).getOwnerId();
+    }
+
+    @Override
+    public Boolean isMember(Integer workspaceId, Integer memberId) {
+        return workspaceMemberRepository.existsByWorkspaceIdAndUserId(workspaceId, memberId);
+    }
+
+    @Override
+    public Boolean isPrivate(Integer workspaceId) {
+        return getWorkspace(workspaceId).getVisibility().name().equals("PRIVATE");
+    }
+
     private void validateAccess(Integer workspaceId, Integer userId) {
         Workspace workspace = getWorkspace(workspaceId);
         if(!workspace.getOwnerId().equals(userId)) {

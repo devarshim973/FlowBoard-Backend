@@ -1,6 +1,7 @@
 package com.flowboard.auth_service.oauthHandler;
 
 import com.flowboard.auth_service.entity.PROVIDER;
+import com.flowboard.auth_service.entity.ROLE;
 import com.flowboard.auth_service.entity.User;
 import com.flowboard.auth_service.exception.UserNotFoundException;
 import com.flowboard.auth_service.repository.UserRepository;
@@ -54,8 +55,10 @@ public class OAuthAuthenticationSuccessHandler extends SimpleUrlAuthenticationSu
             user.setEmail(email);
             user.setFullName(name);
             user.setProvider(PROVIDER.GOOGLE);
+            user.setRole(ROLE.USER);
             user.setAvatarUrl(avatarUrl);
             user.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
+            user.setActive(true);
             userRepo.save(user);
             userId = user.getUserId();
         }
@@ -74,4 +77,3 @@ public class OAuthAuthenticationSuccessHandler extends SimpleUrlAuthenticationSu
         getRedirectStrategy().sendRedirect(request, response, redirectUrl);
     }
 }
-

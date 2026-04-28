@@ -14,7 +14,7 @@ import java.util.List;
 /*
 Not using this as using rabbit mq for async communication
  */
-@FeignClient(name = "NOTIFICATION-SERVICE", fallback = NotificationFallback.class)
+@FeignClient(name = "NOTIFICATION-SERVICE", url = "${services.notification.url:http://localhost:8082}", fallback = NotificationFallback.class)
 public interface NotificationClient {
     @PostMapping("/api/v1/notifications/bulk")
     public ResponseEntity<List<NotificationResponseDto>> sendBulk(@RequestBody BulkNotificationRequestDto dto);

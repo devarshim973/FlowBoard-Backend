@@ -5,7 +5,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
-@FeignClient(name = "BOARD-SERVICE", fallback = BoardFallback.class)
+@FeignClient(name = "BOARD-SERVICE", url = "${services.board.url:http://localhost:8085}", fallback = BoardFallback.class)
 public interface BoardClient {
     @GetMapping("/api/v1/board-members/{boardId}/is-member/{userId}")
     public Boolean isMember(

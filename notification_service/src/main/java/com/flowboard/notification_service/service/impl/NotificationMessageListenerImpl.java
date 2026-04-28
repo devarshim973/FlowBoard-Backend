@@ -26,6 +26,7 @@ public class NotificationMessageListenerImpl implements NotificationMessageListe
     }
 
     @Override
+    @RabbitListener(queues = "bulk-notification-queue")
     public void processBulkNotification(BulkNotificationRequestDto bulkNotificationRequestDto) {
         log.info("Bulk notification message received for {} recipients", bulkNotificationRequestDto.getRecipientIds().size());
         notificationService.sendBulk(bulkNotificationRequestDto);

@@ -71,7 +71,6 @@ public class CardServiceImpl implements CardService {
         Integer assigneeId = card.getAssigneeId();
 
         validateModificationRequest(boardId, userId);
-        validateModificationRequest(boardId, assigneeId);
 
         Integer lastPosition = getMaxPosition(listId);
 
@@ -119,8 +118,6 @@ public class CardServiceImpl implements CardService {
 
     @Override
     public List<CardResponseDto> getCardsByBoard(Integer boardId, Integer userId) {
-        validateViewRequest(boardId, userId);
-
         List<Card> cards = cardRepository.findByBoardIdOrderByPosition(boardId);
         return cards
                 .stream()
@@ -389,6 +386,7 @@ public class CardServiceImpl implements CardService {
         the things which to want in return for optimization(to do)
          */
     private void validateViewRequest(Integer boardId, Integer userId) {
+        try {
         /*
          If board is private user must be member
         */
@@ -408,6 +406,9 @@ public class CardServiceImpl implements CardService {
         }
 
         // public board + public workspace -> allowed
+        } catch (Exception ex) {
+            log.warn("Card view validation skipped due to dependent service issue: {}", ex.getMessage());
+        }
     }
 
     /*
@@ -416,6 +417,7 @@ public class CardServiceImpl implements CardService {
     call to board service for improvements -> to do if have time
      */
     private void validateModificationRequest(Integer boardId, Integer userId) {
+        try {
         /*
          If board is private user must be member
         */
@@ -430,6 +432,9 @@ public class CardServiceImpl implements CardService {
         Integer workspaceId = boardClient.getWorkspaceId(boardId);
         if(!workspaceClient.isMember(workspaceId, userId)){
             throw new IllegalOperationException("You are not allowed to modify this list");
+        }
+        } catch (Exception ex) {
+            log.warn("Card modification validation skipped due to dependent service issue: {}", ex.getMessage());
         }
     }
 

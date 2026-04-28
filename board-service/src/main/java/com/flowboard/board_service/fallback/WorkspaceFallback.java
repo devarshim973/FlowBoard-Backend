@@ -11,18 +11,18 @@ public class WorkspaceFallback implements WorkspaceClient {
     @Override
     public Integer getOwnerId(Integer id) {
         log.error("CIRCUIT BREAKER - workspace client unreachable");
-        throw new ServiceUnavailableException("User service not available");
+        throw new ServiceUnavailableException("Workspace service not available");
     }
 
     @Override
     public Boolean isMember(Integer workspaceId, Integer memberId) {
         log.error("CIRCUIT BREAKER - workspace client unreachable");
-        throw new ServiceUnavailableException("User service not available");
+        throw new ServiceUnavailableException("Workspace service not available");
     }
 
     @Override
     public Boolean isPrivate(Integer workspaceId) {
         log.error("CIRCUIT BREAKER - workspace client unreachable");
-        throw new ServiceUnavailableException("User service not available");
+        throw new ServiceUnavailableException("Workspace service not available");
     }
 }

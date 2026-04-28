@@ -42,8 +42,6 @@ public class BoardServiceImpl implements BoardService {
         Integer workspaceId = boardRequestDto.getWorkspaceId();
         log.info("Create board requested for workspace {}", workspaceId);
 
-        validateCreationAccess(workspaceId, userId);
-
         if(boardRepository.existsByNameAndWorkspaceId(boardRequestDto.getName(), workspaceId)) {
             log.warn("Board creation failed because board {} already exists in workspace {}", boardRequestDto.getName(), workspaceId);
             throw new IllegalOperationException("Board already exist in workspace with same name");
@@ -56,7 +54,7 @@ public class BoardServiceImpl implements BoardService {
 
         BoardMember member = BoardMember
                 .builder()
-                .boardId(board.getBoardId())
+                .boardId(savedBoard.getBoardId())
                 .userId(userId)
                 .build();
 
@@ -242,15 +240,6 @@ public class BoardServiceImpl implements BoardService {
 
     private boolean isMember(Integer userId, Integer boardId) {
         return boardMemberRepository.existsByBoardIdAndUserId(boardId, userId);
-    }
-
-    /*
-        check only workspace owner can perform board level operations
-     */
-    private void validateCreationAccess(Integer workspaceId, Integer userId) {
-        if(!workspaceClient.getOwnerId(workspaceId).equals(userId)) {
-            throw new IllegalOperationException("You are not allowed to create board in this workspace");
-        }
     }
 
     /*

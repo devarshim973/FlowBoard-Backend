@@ -44,7 +44,7 @@ public class User implements UserDetails {
     private String password;
 
     @Enumerated(EnumType.STRING)
-    private ROLE role = ROLE.MEMBER;
+    private ROLE role = ROLE.USER;
 
     private String avatarUrl;
 

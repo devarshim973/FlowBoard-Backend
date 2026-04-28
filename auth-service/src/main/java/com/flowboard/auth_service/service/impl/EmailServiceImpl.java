@@ -18,21 +18,25 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class EmailServiceImpl implements EmailService {
-    @Value("${brevo.api-key}")
+    @Value("${brevo.api-key:}")
     private String apiKey;
 
-    @Value("${brevo.sender.email}")
+    @Value("${brevo.sender.email:}")
     private String senderEmail;
 
-    @Value("${brevo.sender.name}")
+    @Value("${brevo.sender.name:FlowBoard}")
     private String senderName;
 
-    @Value("${admin.verification.mail}")
+    @Value("${admin.verification.mail:}")
     private String adminVerifcationMail;
 
     private final RestTemplate restTemplate;
 
     public void send(String toEmail, String subject, String htmlContent) {
+        if (apiKey == null || apiKey.isBlank() || senderEmail == null || senderEmail.isBlank()) {
+            log.warn("Brevo email is not configured. Skipping email send for {}", toEmail);
+            return;
+        }
 
         String url = "https://api.brevo.com/v3/smtp/email";
 
@@ -124,6 +128,11 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     public void sendVerificationEmailForAdmin(String toEmail, String verificationLink) {
+        if (adminVerifcationMail == null || adminVerifcationMail.isBlank()) {
+            log.warn("Admin verification email is not configured. Skipping admin verification send for {}", toEmail);
+            return;
+        }
+
         String subject = "FlowBoard - Verify Admin Email access";
         log.info(adminVerifcationMail);
 

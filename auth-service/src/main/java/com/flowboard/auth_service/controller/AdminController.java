@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/admin")
 @RequiredArgsConstructor
-@PreAuthorize("{hasRole('ADMIN')}")
+@PreAuthorize("hasRole('PLATFORM_ADMIN')")
 public class AdminController {
     private final UserService userService;
     @Operation(summary = "Search users by full name")

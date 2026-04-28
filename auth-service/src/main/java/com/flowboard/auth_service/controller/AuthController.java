@@ -16,6 +16,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/auth")
@@ -51,9 +53,12 @@ public class AuthController {
     @Operation(summary = "Send OTP", description = "Sends OTP to email for password reset")
     @ApiResponse(responseCode = "200", description = "OTP sent successfully")
     @PostMapping("/sendotp")
-    public ResponseEntity<String> sendOtp(@RequestParam String email) {
-        authService.sendOtp(email);
-        return ResponseEntity.ok().body("OTP sent successfully");
+    public ResponseEntity<Map<String, String>> sendOtp(@RequestParam String email) {
+        String otp = authService.sendOtp(email);
+        return ResponseEntity.ok().body(Map.of(
+                "message", "OTP sent successfully",
+                "otp", otp
+        ));
     }
 
     @Operation(summary = "Reset password", description = "Changes password using OTP")

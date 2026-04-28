@@ -15,7 +15,7 @@ public interface AuthService {
 
     void verify(String token);
 
-    void sendOtp(String email);
+    String sendOtp(String email);
 
     UserDto registerAdmin(SignupDto signupDto);
 }

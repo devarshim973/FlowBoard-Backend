@@ -1,5 +1,5 @@
 package com.flowboard.auth_service.entity;
 
 public enum ROLE {
-    MEMBER, PLATFORM_ADMIN
+    MEMBER, PLATFORM_ADMIN, USER
 }

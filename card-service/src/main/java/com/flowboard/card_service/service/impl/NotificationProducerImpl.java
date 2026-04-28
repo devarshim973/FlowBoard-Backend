@@ -27,13 +27,21 @@ public class NotificationProducerImpl implements NotificationProcedure {
 
     @Override
     public void sendBulk(BulkNotificationRequestDto message) {
-        log.info("Added a bulk notification in queue");
-        rabbitTemplate.convertAndSend(exchange, bulkRoutingKey, message);
+        try {
+            log.info("Added a bulk notification in queue");
+            rabbitTemplate.convertAndSend(exchange, bulkRoutingKey, message);
+        } catch (Exception ex) {
+            log.error("Bulk notification publish failed: {}", ex.getMessage());
+        }
     }
 
     @Override
     public void sendSingle(NotificationRequestDto message) {
-        log.info("Added a single notification in queue");
-        rabbitTemplate.convertAndSend(exchange, singleRoutingKey, message);
+        try {
+            log.info("Added a single notification in queue");
+            rabbitTemplate.convertAndSend(exchange, singleRoutingKey, message);
+        } catch (Exception ex) {
+            log.error("Single notification publish failed: {}", ex.getMessage());
+        }
     }
 }

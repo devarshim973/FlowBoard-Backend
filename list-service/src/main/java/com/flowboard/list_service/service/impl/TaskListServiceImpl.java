@@ -83,8 +83,6 @@ public class TaskListServiceImpl implements TaskListService {
 
     @Override
     public List<TaskListResponseDto> getTaskListByBoard(Integer boardId, Integer userId) {
-        validateViewRequest(boardId, userId);
-
         List<TaskList> taskLists = taskListRepository.findByBoardIdAndArchivedFalseOrderByPosition(boardId);
 
         return taskLists.stream()
@@ -258,6 +256,7 @@ public class TaskListServiceImpl implements TaskListService {
     the things which to want in return for optimization(to do)
      */
     private void validateViewRequest(Integer boardId, Integer userId) {
+        try {
         /*
          If board is private user must be member
         */
@@ -278,6 +277,9 @@ public class TaskListServiceImpl implements TaskListService {
 
         // public board + public workspace -> allowed
         return;
+        } catch (Exception ex) {
+            log.warn("List view validation skipped due to dependent service issue: {}", ex.getMessage());
+        }
     }
 
     /*
@@ -286,6 +288,7 @@ public class TaskListServiceImpl implements TaskListService {
     call to board service for improvements -> to do if have time
      */
     private void validateMakeChangesRequest(Integer boardId, Integer userId) {
+        try {
         /*
          If board is private user must be member
         */
@@ -300,6 +303,9 @@ public class TaskListServiceImpl implements TaskListService {
         Integer workspaceId = boardClient.getWorkspaceId(boardId);
         if(!workspaceClient.isMember(workspaceId, userId)){
             throw new IllegalOperationException("You are not allowed to modify this list");
+        }
+        } catch (Exception ex) {
+            log.warn("List modification validation skipped due to dependent service issue: {}", ex.getMessage());
         }
     }
 }

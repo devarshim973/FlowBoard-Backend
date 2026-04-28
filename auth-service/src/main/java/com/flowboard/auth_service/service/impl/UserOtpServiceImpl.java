@@ -25,7 +25,7 @@ public class UserOtpServiceImpl implements UserOtpService {
     private final UserOtpRepository userOtpRepository;
     private final EmailService emailService;
     @Override
-    public void sendOtp(String email) {
+    public String sendOtp(String email) {
         log.info("OTP send requested for email {}", email);
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("User does not exist with email " + email));
@@ -42,6 +42,7 @@ public class UserOtpServiceImpl implements UserOtpService {
             userOtpRepository.save(userOtp);
             emailService.sendOtpEmail(email, otp);
             log.info("OTP sent to user {}", user.getUserId());
+            return otp;
         }
         else {
             UserOtp userOtp = userOtpOptional.get();
@@ -61,6 +62,7 @@ public class UserOtpServiceImpl implements UserOtpService {
             userOtpRepository.save(userOtp);
             emailService.sendOtpEmail(user.getEmail(), otp);
             log.info("OTP resent to user {}", user.getUserId());
+            return otp;
         }
     }
 }

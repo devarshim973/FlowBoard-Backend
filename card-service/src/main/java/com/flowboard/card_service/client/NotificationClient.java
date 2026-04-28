@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 
-@FeignClient(name = "NOTIFICATION-SERVICE", fallback = NotificationFallback.class)
+@FeignClient(name = "NOTIFICATION-SERVICE", url = "${services.notification.url:http://localhost:8082}", fallback = NotificationFallback.class)
 public interface NotificationClient {
     @PostMapping("/api/v1/notifications/send")
     public ResponseEntity<NotificationResponseDto> handleSendNotification(@Valid @RequestBody NotificationRequestDto notificationRequestDto);

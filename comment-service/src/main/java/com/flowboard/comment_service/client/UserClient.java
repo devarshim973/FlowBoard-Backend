@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
-@FeignClient(name = "AUTH-SERVICE", fallback = UserFallback.class)
+@FeignClient(name = "AUTH-SERVICE", url = "${services.auth.url:http://localhost:8081}", fallback = UserFallback.class)
 public interface UserClient {
     @GetMapping("/api/v1/user/findAll")
     public List<Integer> getUserIdsByUsername(@RequestParam List<String> userEmailList);

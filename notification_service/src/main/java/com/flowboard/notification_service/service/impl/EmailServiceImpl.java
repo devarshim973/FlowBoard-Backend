@@ -20,19 +20,23 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Slf4j
 public class EmailServiceImpl implements EmailService {
-    @Value("${brevo.api-key}")
+    @Value("${brevo.api-key:}")
     private String apiKey;
 
-    @Value("${brevo.sender.email}")
+    @Value("${brevo.sender.email:}")
     private String senderEmail;
 
-    @Value("${brevo.sender.name}")
+    @Value("${brevo.sender.name:FlowBoard}")
     private String senderName;
 
     private final RestTemplate restTemplate;
 
     @Override
     public void send(String toEmail, String subject, String htmlContent) {
+        if (apiKey == null || apiKey.isBlank() || senderEmail == null || senderEmail.isBlank()) {
+            log.warn("Brevo email is not configured. Skipping email send for {}", toEmail);
+            return;
+        }
 
         String url = "https://api.brevo.com/v3/smtp/email";
 
@@ -66,7 +70,6 @@ public class EmailServiceImpl implements EmailService {
 
         } catch (Exception e) {
             log.error("Brevo Error: {}", e.getMessage());
-            throw new RuntimeException("Unable to send email");
         }
     }
 

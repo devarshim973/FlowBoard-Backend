@@ -1,18 +1,16 @@
 package com.flowboard.flowboard_api_gateway.service;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 
 @Service
+@RequiredArgsConstructor
 public class RateLimiterService {
 
     private final RedisTemplate redisTemplate;
-
-    public RateLimiterService(RedisTemplate redisTemplate) {
-        this.redisTemplate = redisTemplate;
-    }
 
     private static final int LIMIT = 100;
     private static final Duration WINDOW = Duration.ofSeconds(60);

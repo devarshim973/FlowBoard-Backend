@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
-@FeignClient(name = "AUTH-SERVICE", url = "http://localhost:8081", fallback = UserFallback.class)
+@FeignClient(name = "AUTH-SERVICE", fallback = UserFallback.class)
 public interface UserClient {
     @GetMapping("api/v1/user/bulk")
     public List<UserDto> getUserBulk(@RequestParam List<Integer> userIds);

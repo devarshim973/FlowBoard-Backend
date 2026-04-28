@@ -10,7 +10,6 @@ public class ListServiceApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(ListServiceApplication.class, args);
-		System.out.println("List-Service is Running.....!");
 	}
 
 }

@@ -25,6 +25,7 @@ spring:
     username: guest
     password: guest
 
+
   management:
     endpoints:
       web:

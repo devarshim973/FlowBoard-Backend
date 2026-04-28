@@ -31,11 +31,3 @@ build/
 
 ### VS Code ###
 .vscode/
-
-### Hidden Content ###
-
-# Environment files
-.env
-
-# Spring profiles
-**/application-dev.yml

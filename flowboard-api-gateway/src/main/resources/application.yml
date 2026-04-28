@@ -83,6 +83,7 @@ spring:
           predicates:
             - Path=/api/v1/subscriptions/**
 
+
   management:
     endpoints:
       web:
@@ -105,7 +106,9 @@ eureka:
 
 security:
   jwt:
-    secret: ${JWT_SECRET:${jwt-secret-key:Zmxvd2JvYXJkLWxvY2FsLWRldi1qd3Qtc2VjcmV0LWtleS0xMjM0NTY3ODkw}}
+    secret: ${jwt-secret-key}
+
+
 
 
 

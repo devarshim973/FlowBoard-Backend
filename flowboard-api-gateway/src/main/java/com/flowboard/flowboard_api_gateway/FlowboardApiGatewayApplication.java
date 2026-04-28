@@ -8,7 +8,6 @@ public class FlowboardApiGatewayApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(FlowboardApiGatewayApplication.class, args);
-		System.out.println("API-Gateway is Running.....!");
 	}
 
 }

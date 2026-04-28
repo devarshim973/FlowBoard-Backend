@@ -10,7 +10,7 @@ public class FlowboardServerApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(FlowboardServerApplication.class, args);
-		System.out.println("Eureka-Server is Running.........!");
+		System.out.println("Eureka Server is Running....");
 	}
 
 }

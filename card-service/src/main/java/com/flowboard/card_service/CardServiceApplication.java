@@ -11,6 +11,5 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class CardServiceApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(CardServiceApplication.class, args);
-		System.out.println("List-Service is Running.....!");
 	}
 }

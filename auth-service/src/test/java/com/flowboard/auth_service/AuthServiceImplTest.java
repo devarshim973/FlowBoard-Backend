@@ -181,7 +181,7 @@ class AuthServiceImplTest {
         when(userRepository.findByEmail("john@gmail.com"))
                 .thenReturn(Optional.of(user));
 
-        when(jwtService.generateToken("john@gmail.com", "MEMBER", 1))
+        when(jwtService.generateToken("john@gmail.com", "USER", 1))
                 .thenReturn("jwt-token");
 
         String result = authService.login(loginDto);

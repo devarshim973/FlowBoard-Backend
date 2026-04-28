@@ -1,7 +1,6 @@
 package com.flowboard.flowboard_api_gateway.filter;
 
 import com.flowboard.flowboard_api_gateway.service.RateLimiterService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -11,9 +10,12 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 @Component
-@RequiredArgsConstructor
 public class RateLimitFilter implements GlobalFilter, Ordered {
     private final RateLimiterService rateLimiterService;
+
+    public RateLimitFilter(RateLimiterService rateLimiterService) {
+        this.rateLimiterService = rateLimiterService;
+    }
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange,

@@ -105,9 +105,7 @@ eureka:
 
 security:
   jwt:
-    secret: ${jwt-secret-key}
-
-
+    secret: ${JWT_SECRET:${jwt-secret-key:Zmxvd2JvYXJkLWxvY2FsLWRldi1qd3Qtc2VjcmV0LWtleS0xMjM0NTY3ODkw}}
 
 
 

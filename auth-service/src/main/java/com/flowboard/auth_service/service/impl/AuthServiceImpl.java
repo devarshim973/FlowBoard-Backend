@@ -12,6 +12,7 @@ import com.flowboard.auth_service.entity.User;
 import com.flowboard.auth_service.entity.UserOtp;
 import com.flowboard.auth_service.entity.UserVerification;
 import com.flowboard.auth_service.exception.OtpException;
+import com.flowboard.auth_service.exception.UserAlreadyExistException;
 import com.flowboard.auth_service.exception.UserNotFoundException;
 import com.flowboard.auth_service.repository.UserOtpRepository;
 import com.flowboard.auth_service.repository.UserRepository;
@@ -25,6 +26,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -52,6 +54,7 @@ public class AuthServiceImpl implements AuthService {
     private String url;
 
     @Override
+    @Transactional
     public UserDto register(SignupDto signupDto) {
         log.info("User signup requested for email {}", signupDto.getEmail());
         /* if user already exist with the same email delete it from both verfication table
@@ -61,7 +64,7 @@ public class AuthServiceImpl implements AuthService {
         if(userOptional.isPresent()) {
             if(userOptional.get().isActive()) {
                 log.warn("Signup rejected because user already exists for email {}", signupDto.getEmail());
-                throw new UserNotFoundException("User already exist with email " + signupDto.getEmail());
+                throw new UserAlreadyExistException("User already exists with email " + signupDto.getEmail());
             }
             log.info("Removing inactive user record before signup for email {}", signupDto.getEmail());
             userRepository.delete(userOptional.get());
@@ -69,47 +72,35 @@ public class AuthServiceImpl implements AuthService {
         }
 
         User user = signupRequestMapper.mapTo(signupDto);
-        user.setRole(ROLE.USER);
+        user.setRole(ROLE.MEMBER);
+        user.setActive(true);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         User savedUser = userRepository.save(user);
-
-        String token = UUID.randomUUID().toString();
-        UserVerification userVerification = UserVerification.builder()
-                .userId(savedUser.getUserId())
-                .token(token)
-                .build();
-
-        UserVerification saveduserVerification = userVerificationService.save(userVerification);
-
-        emailService.sendVerificationEmail(user.getEmail(), url + "auth/verify/" + saveduserVerification.getToken());
         log.info("User signup completed for user {}", savedUser.getUserId());
 
         return userResponseMapper.mapTo(savedUser);
     }
 
     @Override
+    @Transactional
     public UserDto registerAdmin(SignupDto signupDto) {
         log.info("Admin signup requested for email {}", signupDto.getEmail());
         Optional<User> userOptional = userRepository.findByEmail(signupDto.getEmail());
         if(userOptional.isPresent()) {
-            log.warn("Admin signup rejected because user already exists for email {}", signupDto.getEmail());
-            throw new UserNotFoundException("User already exist with email " + signupDto.getEmail());
+            if(userOptional.get().isActive()) {
+                log.warn("Admin signup rejected because user already exists for email {}", signupDto.getEmail());
+                throw new UserAlreadyExistException("User already exists with email " + signupDto.getEmail());
+            }
+            log.info("Removing inactive admin signup record for email {}", signupDto.getEmail());
+            userVerificationRepository.deleteByUserId(userOptional.get().getUserId());
+            userRepository.delete(userOptional.get());
         }
 
         User user = signupRequestMapper.mapTo(signupDto);
         user.setRole(ROLE.PLATFORM_ADMIN);
+        user.setActive(true);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         User savedUser = userRepository.save(user);
-
-        String token = UUID.randomUUID().toString();
-        UserVerification userVerification = UserVerification.builder()
-                .userId(savedUser.getUserId())
-                .token(token)
-                .build();
-
-        UserVerification saveduserVerification = userVerificationService.save(userVerification);
-
-        emailService.sendVerificationEmailForAdmin(user.getEmail(), url + "auth/verify/" + saveduserVerification.getToken());
         log.info("Admin signup completed for user {}", savedUser.getUserId());
 
         return userResponseMapper.mapTo(savedUser);
@@ -127,6 +118,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional
     public void verify(String token) {
         UserVerification userVerification = userVerificationService.findByToken(token);
         User user = userService.findById(userVerification.getUserId());
@@ -146,6 +138,7 @@ public class AuthServiceImpl implements AuthService {
 
 
     @Override
+    @Transactional
     public void changePassword(ForgetPasswordDto forgetPasswordDto) {
         log.info("Password reset requested for email {}", forgetPasswordDto.getEmail());
         User user = userRepository.findByEmail(forgetPasswordDto.getEmail())

@@ -66,16 +66,18 @@ public class CardServiceImpl implements CardService {
         Card card = requestMapper.mapTo(cardRequestDto);
 
         Integer boardId = card.getBoardId();
-
         Integer listId = card.getListId();
-        Integer assigneeId = card.getAssigneeId();
 
         validateModificationRequest(boardId, userId);
-        validateModificationRequest(boardId, assigneeId);
+
+        Integer actualBoardId = listClient.getBoardId(listId);
+        if(!boardId.equals(actualBoardId)) {
+            throw new IllegalOperationException("The selected list does not belong to this board");
+        }
 
         Integer lastPosition = getMaxPosition(listId);
 
-        card.setPosition(lastPosition+1);
+        card.setPosition(lastPosition + 1);
         card.setCoverColor(getCoverColor(card.getPriority()));
         card.setCreatedById(userId);
 
@@ -265,7 +267,7 @@ public class CardServiceImpl implements CardService {
         Integer boardId = card.getBoardId();
 
         validateModificationRequest(boardId, userId);
-        validateModificationRequest(assigneeId, userId);
+        validateViewRequest(boardId, assigneeId);
 
         card.setAssigneeId(assigneeId);
 
@@ -434,7 +436,8 @@ public class CardServiceImpl implements CardService {
     }
 
     private Integer getMaxPosition(Integer listId) {
-        return cardRepository.maxPosition(listId);
+        Integer maxPosition = cardRepository.maxPosition(listId);
+        return maxPosition == null ? 0 : maxPosition;
     }
 
     private String getCoverColor(Priority priority) {

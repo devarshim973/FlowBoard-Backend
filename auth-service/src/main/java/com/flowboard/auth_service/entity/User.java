@@ -21,6 +21,7 @@ import java.util.List;
 @NoArgsConstructor
 @Slf4j
 @Table(
+        name = "users",
         indexes = {
                 @Index(name = "idx_email", columnList = "email")
         }

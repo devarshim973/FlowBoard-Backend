@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +21,7 @@ public class UserVerificationServiceImpl implements UserVerificationService {
     }
 
     @Override
+    @Transactional
     public void deleteByUserId(Integer userId) {
         UserVerification userVerification = userVerificationRepository.findByUserId(userId)
                         .orElseThrow(() -> new UsernameNotFoundException("User not found with id " + userId));

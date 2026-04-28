@@ -8,6 +8,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.http.HttpHeaders;
 import java.util.HashMap;
@@ -33,31 +34,45 @@ public class EmailServiceImpl implements EmailService {
     private final RestTemplate restTemplate;
 
     public void send(String toEmail, String subject, String htmlContent) {
+        if (!StringUtils.hasText(toEmail)) {
+            log.warn("Skipping email send because recipient address is blank");
+            return;
+        }
 
-        String url = "https://api.brevo.com/v3/smtp/email";
+        if (!StringUtils.hasText(apiKey)) {
+            log.warn("Skipping email send because Brevo API key is not configured");
+            return;
+        }
 
-        Map<String, Object> body = new HashMap<>();
-
-        body.put("sender", Map.of(
-                "email", senderEmail,
-                "name", senderName
-        ));
-
-        body.put("to", List.of(
-                Map.of("email", toEmail)
-        ));
-
-        body.put("subject", subject);
-        body.put("htmlContent", htmlContent);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("api-key", apiKey);
-
-        HttpEntity<Map<String, Object>> request =
-                new HttpEntity<>(body, headers);
+        if (!StringUtils.hasText(senderEmail)) {
+            log.warn("Skipping email send because sender email is not configured");
+            return;
+        }
 
         try {
+            String url = "https://api.brevo.com/v3/smtp/email";
+
+            Map<String, Object> body = new HashMap<>();
+
+            body.put("sender", Map.of(
+                    "email", senderEmail,
+                    "name", senderName
+            ));
+
+            body.put("to", List.of(
+                    Map.of("email", toEmail)
+            ));
+
+            body.put("subject", subject);
+            body.put("htmlContent", htmlContent);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("api-key", apiKey);
+
+            HttpEntity<Map<String, Object>> request =
+                    new HttpEntity<>(body, headers);
+
             ResponseEntity<String> response =
                     restTemplate.postForEntity(url, request, String.class);
 
@@ -125,7 +140,8 @@ public class EmailServiceImpl implements EmailService {
     @Override
     public void sendVerificationEmailForAdmin(String toEmail, String verificationLink) {
         String subject = "FlowBoard - Verify Admin Email access";
-        log.info(adminVerifcationMail);
+        String adminVerificationTarget = StringUtils.hasText(adminVerifcationMail) ? adminVerifcationMail : toEmail;
+        log.info("Admin verification mail target {}", adminVerificationTarget);
 
         String htmlContent = """
     <html>
@@ -151,7 +167,7 @@ public class EmailServiceImpl implements EmailService {
     </html>
     """.formatted(toEmail, verificationLink, verificationLink);
 
-        this.send(adminVerifcationMail, subject, htmlContent);
+        this.send(adminVerificationTarget, subject, htmlContent);
     }
 
     @Override

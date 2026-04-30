@@ -1,0 +1,121 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: flowboard-api-gateway
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  cloud:
+    gateway:
+      routes:
+        - id: auth-service
+          uri: lb://AUTH-SERVICE
+          predicates:
+            - Path=/api/v1/auth/**
+
+        - id: oauth-service
+          uri: lb://AUTH-SERVICE
+          predicates:
+            - Path=/oauth2/**
+
+        - id: oauth-callback
+          uri: lb://AUTH-SERVICE
+          predicates:
+            - Path=/login/oauth2/**
+
+        - id: user-service
+          uri: lb://AUTH-SERVICE
+          predicates:
+            - Path=/api/v1/user/**
+
+        - id: admin-service
+          uri: lb://AUTH-SERVICE
+          predicates:
+            - Path=/api/v1/admin/**
+
+        - id: notification-service
+          uri: lb://NOTIFICATION-SERVICE
+          predicates:
+            - Path=/api/v1/notifications/**
+
+        - id: comment-service
+          uri: lb://COMMENT-SERVICE
+          predicates:
+            - Path=/api/v1/comments/**
+
+        - id: attachment-service
+          uri: lb://COMMENT-SERVICE
+          predicates:
+            - Path=/api/v1/attachments/**
+
+        - id: workspace-service
+          uri: lb://WORKSPACE-SERVICE
+          predicates:
+            - Path=/api/v1/workspaces/**
+
+        - id: board-service
+          uri: lb://BOARD-SERVICE
+          predicates:
+            - Path=/api/v1/boards/**
+
+        - id: board-member-service
+          uri: lb://BOARD-SERVICE
+          predicates:
+            - Path=/api/v1/board-members/**
+
+        - id: list-service
+          uri: lb://LIST-SERVICE
+          predicates:
+            - Path=/api/v1/lists/**
+
+        - id: card-service
+          uri: lb://CARD-SERVICE
+          predicates:
+            - Path=/api/v1/cards/**
+
+        - id: payment-service
+          uri: lb://PAYMENT-SERVICE
+          predicates:
+            - Path=/api/v1/payments/**
+
+        - id: subscription-service
+          uri: lb://PAYMENT-SERVICE
+          predicates:
+            - Path=/api/v1/subscriptions/**
+
+
+  management:
+    endpoints:
+      web:
+        exposure:
+          include: "*"
+
+    endpoint:
+      health:
+        show-details: always
+
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+
+security:
+  jwt:
+    secret: ${jwt-secret-key}
+
+
+
+
+
+
+

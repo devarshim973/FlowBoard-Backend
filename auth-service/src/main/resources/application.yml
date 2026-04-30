@@ -56,7 +56,3 @@ eureka:
     fetch-registry: true
   instance:
     prefer-ip-address: true
-
-admin:
-  verification:
-    mail: ${admin-verification-mail}

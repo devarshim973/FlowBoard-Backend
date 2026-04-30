@@ -27,4 +27,12 @@ public class SignupDto {
 	    message = "Password must contain 1 lowercase, 1 uppercase, 1 digit, special char, min 8"
 	)
 	private String password;
+
+	private String otp;
+
+	public SignupDto(String fullName, String email, String password) {
+		this.fullName = fullName;
+		this.email = email;
+		this.password = password;
+	}
 }

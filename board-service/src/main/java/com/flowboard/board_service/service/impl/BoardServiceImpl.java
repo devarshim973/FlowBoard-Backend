@@ -39,11 +39,18 @@ public class BoardServiceImpl implements BoardService {
 
     @Override
     public BoardResponseDto createBoard(BoardRequestDto boardRequestDto, Integer userId) {
+
         Integer workspaceId = boardRequestDto.getWorkspaceId();
         log.info("Create board requested for workspace {}", workspaceId);
 
-        if(boardRepository.existsByNameAndWorkspaceId(boardRequestDto.getName(), workspaceId)) {
-            log.warn("Board creation failed because board {} already exists in workspace {}", boardRequestDto.getName(), workspaceId);
+        // ✅ ADD THIS VALIDATION
+        Integer ownerId = workspaceClient.getOwnerId(workspaceId);
+
+        if (!ownerId.equals(userId)) {
+            throw new IllegalOperationException("You are not owner of workspace");
+        }
+
+        if (boardRepository.existsByNameAndWorkspaceId(boardRequestDto.getName(), workspaceId)) {
             throw new IllegalOperationException("Board already exist in workspace with same name");
         }
 
@@ -52,14 +59,12 @@ public class BoardServiceImpl implements BoardService {
 
         Board savedBoard = boardRepository.save(board);
 
-        BoardMember member = BoardMember
-                .builder()
+        BoardMember member = BoardMember.builder()
                 .boardId(savedBoard.getBoardId())
                 .userId(userId)
                 .build();
 
         boardMemberRepository.save(member);
-        log.info("Board created with id {}", savedBoard.getBoardId());
 
         return boardResponseMapper.mapTo(savedBoard);
     }

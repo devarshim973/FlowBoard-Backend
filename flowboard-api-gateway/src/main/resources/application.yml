@@ -78,8 +78,13 @@ spring:
           predicates:
             - Path=/api/v1/cards/**
 
+        - id: payment-service
+          uri: lb://PAYMENT-SERVICE
+          predicates:
+            - Path=/api/v1/payments/**
+
         - id: subscription-service
-          uri: lb://SUBSCRIPTION-SERVICE
+          uri: lb://PAYMENT-SERVICE
           predicates:
             - Path=/api/v1/subscriptions/**
 
@@ -107,7 +112,6 @@ eureka:
 security:
   jwt:
     secret: ${jwt-secret-key}
-
 
 
 

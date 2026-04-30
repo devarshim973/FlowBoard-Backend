@@ -1,5 +1,6 @@
 package com.flowboard.workspace_service;
 
+import com.flowboard.workspace_service.client.PaymentClient;
 import com.flowboard.workspace_service.dto.WorkspaceRequestDto;
 import com.flowboard.workspace_service.dto.WorkspaceResponseDto;
 import com.flowboard.workspace_service.entity.Visibility;
@@ -47,6 +48,9 @@ class WorkspaceServiceImplTest {
     @Mock
     private WorkspaceMemberRepository workspaceMemberRepository;
 
+    @Mock
+    private PaymentClient paymentClient;
+
     @InjectMocks
     private WorkspaceServiceImpl workspaceService;
 
@@ -73,6 +77,9 @@ class WorkspaceServiceImplTest {
 
         when(workspaceRequestMapper.mapTo(dto))
                 .thenReturn(workspace);
+
+        when(workspaceRepository.countByOwnerId(1))
+                .thenReturn(0L);
 
         when(workspaceRepository.save(any(Workspace.class)))
                 .thenReturn(workspace);
@@ -107,6 +114,19 @@ class WorkspaceServiceImplTest {
                 .thenReturn(new WorkspaceResponseDto());
 
         workspaceService.updateWorkspace(1, dto, 1);
+    }
+
+    @Test
+    void createWorkspace_requiresUpgradeAfterFreeLimit() {
+        WorkspaceRequestDto dto = new WorkspaceRequestDto();
+
+        when(workspaceRepository.countByOwnerId(1))
+                .thenReturn(3L);
+        when(paymentClient.hasActiveSubscription(1))
+                .thenReturn(false);
+
+        assertThrows(IllegalOperationException.class,
+                () -> workspaceService.createWorkspace(dto, 1));
     }
 
     @Test

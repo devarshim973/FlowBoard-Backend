@@ -1,5 +1,6 @@
 package com.flowboard.workspace_service.service.impl;
 
+import com.flowboard.workspace_service.client.PaymentClient;
 import com.flowboard.workspace_service.dto.WorkspaceRequestDto;
 import com.flowboard.workspace_service.dto.WorkspaceResponseDto;
 import com.flowboard.workspace_service.entity.Visibility;
@@ -29,14 +30,22 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class WorkspaceServiceImpl implements WorkspaceService {
+    private static final long FREE_WORKSPACE_LIMIT = 3;
+
     private final WorkspaceRepository workspaceRepository;
     private final WorkspaceRequestMapper workspaceRequestMapper;
     private final WorkspaceResponseMapper workspaceResponseMapper;
     private final WorkspaceMemberRepository workspaceMemberRepository;
+    private final PaymentClient paymentClient;
 
     @Override
     public WorkspaceResponseDto createWorkspace(WorkspaceRequestDto workspaceRequestDto, Integer userId) {
         log.info("Create workspace requested by user {}", userId);
+        long ownedWorkspaceCount = workspaceRepository.countByOwnerId(userId);
+        if (ownedWorkspaceCount >= FREE_WORKSPACE_LIMIT && !paymentClient.hasActiveSubscription(userId)) {
+            throw new IllegalOperationException("Workspace limit reached. Upgrade to create more than 3 workspaces.");
+        }
+
         Workspace workspace = workspaceRequestMapper.mapTo(workspaceRequestDto);
         workspace.setOwnerId(userId);
 

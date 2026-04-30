@@ -34,6 +34,17 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(authService.register(signupDto));
     }
 
+    @Operation(summary = "Send signup OTP", description = "Sends OTP to email for signup verification")
+    @ApiResponse(responseCode = "200", description = "Signup OTP sent successfully")
+    @PostMapping("/signup/send-otp")
+    public ResponseEntity<Map<String, String>> sendSignupOtp(@RequestParam String email) {
+        String otp = authService.sendSignupOtp(email);
+        return ResponseEntity.ok().body(Map.of(
+                "message", "Signup OTP sent successfully",
+                "otp", otp
+        ));
+    }
+
     @Operation(summary = "Login user", description = "Authenticates user and returns token")
     @ApiResponse(responseCode = "200", description = "Login successful")
     @PostMapping("/login")

@@ -82,13 +82,11 @@ class AuthServiceImplTest {
 
     @Test
     void register_withValidData_returnsUserDto() {
-
-        ReflectionTestUtils.setField(authService, "url", "http://localhost:8081/");
-
         SignupDto signupDto = new SignupDto();
         signupDto.setFullName("Tarun");
         signupDto.setEmail("tarun@gmail.com");
         signupDto.setPassword("123456");
+        signupDto.setOtp("ABC123");
 
         User user = new User();
         user.setFullName("Tarun");
@@ -106,13 +104,11 @@ class AuthServiceImplTest {
         userDto.setFullName("Tarun");
         userDto.setEmail("tarun@gmail.com");
 
-        UserVerification verification = UserVerification.builder()
-                .userId(1)
-                .token("token123")
-                .build();
-
         when(userRepository.findByEmail("tarun@gmail.com"))
                 .thenReturn(Optional.empty());
+
+        doNothing().when(userOtpService)
+                .validateSignupOtp("tarun@gmail.com", "ABC123");
 
         when(signupRequestMapper.mapTo(signupDto))
                 .thenReturn(user);
@@ -123,14 +119,8 @@ class AuthServiceImplTest {
         when(userRepository.save(any(User.class)))
                 .thenReturn(savedUser);
 
-        when(userVerificationService.save(any(UserVerification.class)))
-                .thenReturn(verification);
-
         when(userResponseMapper.mapTo(savedUser))
                 .thenReturn(userDto);
-
-        doNothing().when(emailService)
-                .sendVerificationEmail(anyString(), anyString());
 
         UserDto result = authService.register(signupDto);
 
@@ -140,14 +130,10 @@ class AuthServiceImplTest {
         assertEquals("tarun@gmail.com", result.getEmail());
 
         verify(userRepository).findByEmail("tarun@gmail.com");
+        verify(userOtpService).validateSignupOtp("tarun@gmail.com", "ABC123");
         verify(signupRequestMapper).mapTo(signupDto);
         verify(passwordEncoder).encode("123456");
         verify(userRepository).save(any(User.class));
-        verify(userVerificationService).save(any(UserVerification.class));
-        verify(emailService).sendVerificationEmail(
-                eq("tarun@gmail.com"),
-                contains("token123")
-        );
         verify(userResponseMapper).mapTo(savedUser);
     }
 
@@ -234,13 +220,16 @@ class AuthServiceImplTest {
     @Test
     void sendOtp_withValidEmail_callsService() {
 
-        doNothing().when(userOtpService).sendOtp("john@gmail.com");
+        when(userOtpService.sendOtp("john@gmail.com"))
+                .thenReturn("123456");
 
-        authService.sendOtp("john@gmail.com");
+        String result = authService.sendOtp("john@gmail.com");
+
+        assertEquals("123456", result);   // ✅ important
 
         verify(userOtpService).sendOtp("john@gmail.com");
     }
-
+    
     @Test
     void changePassword_withValidOtp_updatesPassword() {
 

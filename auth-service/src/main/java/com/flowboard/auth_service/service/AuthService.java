@@ -18,4 +18,6 @@ public interface AuthService {
     String sendOtp(String email);
 
     UserDto registerAdmin(SignupDto signupDto);
+
+    String sendSignupOtp(String email);
 }

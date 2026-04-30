@@ -288,24 +288,16 @@ public class TaskListServiceImpl implements TaskListService {
     call to board service for improvements -> to do if have time
      */
     private void validateMakeChangesRequest(Integer boardId, Integer userId) {
-        try {
-        /*
-         If board is private user must be member
-        */
+
         if(boardClient.isPrivate(boardId)) {
             if(boardClient.isMember(boardId, userId)) return;
             throw new IllegalOperationException("You are not allowed to modify this list");
         }
 
-        /*
-         If we are here means board is public so now must be member to make changes
-        */
         Integer workspaceId = boardClient.getWorkspaceId(boardId);
+
         if(!workspaceClient.isMember(workspaceId, userId)){
             throw new IllegalOperationException("You are not allowed to modify this list");
-        }
-        } catch (Exception ex) {
-            log.warn("List modification validation skipped due to dependent service issue: {}", ex.getMessage());
         }
     }
 }

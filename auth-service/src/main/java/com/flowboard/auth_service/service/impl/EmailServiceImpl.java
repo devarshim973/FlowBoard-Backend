@@ -96,6 +96,27 @@ public class EmailServiceImpl implements EmailService {
     }
 
     @Override
+    public void sendSignupOtpEmail(String toEmail, String otp) {
+        String htmlContent = """
+        <html>
+          <body style="font-family: Arial, sans-serif; color: #333;">
+            <h2>Signup Verification OTP</h2>
+            <p>Hello,</p>
+            <p>Use the following OTP to verify your email and complete your FlowBoard registration:</p>
+            <h3 style="color: #0f766e;">%s</h3>
+            <p>This OTP will expire in 5 minutes.</p>
+            <hr>
+            <p style="font-size:12px;color:gray;">
+              If you did not request this, you can safely ignore this email.
+            </p>
+          </body>
+        </html>
+        """.formatted(otp);
+
+        this.send(toEmail, "FlowBoard - Signup Verification OTP", htmlContent);
+    }
+
+    @Override
     public void sendVerificationEmail(String toEmail, String verificationLink) {
         String subject = "FlowBoard - Verify Your Email Address";
 

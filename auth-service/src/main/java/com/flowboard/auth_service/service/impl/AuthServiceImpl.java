@@ -61,24 +61,28 @@ public class AuthServiceImpl implements AuthService {
         log.info("User signup requested for email {}", signupDto.getEmail());
 
         Optional<User> userOptional = userRepository.findByEmail(signupDto.getEmail());
+
         if (userOptional.isPresent()) {
             if (userOptional.get().isActive()) {
-                log.warn("Signup rejected because user already exists for email {}", signupDto.getEmail());
                 throw new UserNotFoundException("User already exist with email " + signupDto.getEmail());
             }
 
-            log.info("Removing inactive user record before signup for email {}", signupDto.getEmail());
             userRepository.delete(userOptional.get());
             userVerificationRepository.deleteByUserId(userOptional.get().getUserId());
         }
+
+        if (signupDto.getOtp() == null || signupDto.getOtp().isBlank()) {
+            throw new OtpException("Signup OTP is required");
+        }
+
+        userOtpService.validateSignupOtp(signupDto.getEmail(), signupDto.getOtp());
 
         User user = signupRequestMapper.mapTo(signupDto);
         user.setRole(ROLE.USER);
         user.setActive(true);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        User savedUser = userRepository.save(user);
-        log.info("User signup completed for user {}", savedUser.getUserId());
 
+        User savedUser = userRepository.save(user);
         return userResponseMapper.mapTo(savedUser);
     }
 
@@ -139,6 +143,12 @@ public class AuthServiceImpl implements AuthService {
     public String sendOtp(String email) {
         log.info("Password reset OTP requested for email {}", email);
         return userOtpService.sendOtp(email);
+    }
+
+    @Override
+    public String sendSignupOtp(String email) {
+        log.info("Signup OTP requested for email {}", email);
+        return userOtpService.sendSignupOtp(email);
     }
 
     @Override

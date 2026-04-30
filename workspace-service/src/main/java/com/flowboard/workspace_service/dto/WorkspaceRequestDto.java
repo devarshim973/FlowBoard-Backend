@@ -11,12 +11,12 @@ import lombok.Data;
 public class WorkspaceRequestDto {
     @Schema(description = "Workspace name", example = "Development Team")
     @NotBlank(message = "Name cannot be blank")
-    @Size(min = 2, max = 100, message = "Name must be between 2 to 100 character")
+    @Size(min = 2, max = 100, message = "Workspace name must be between 2 and 100 characters")
     private String name;
 
     @Schema(description = "Workspace description", example = "Workspace for managing development tasks")
-    @NotBlank(message = "Name cannot be blank")
-    @Size(min = 2, max = 100, message = "Name must be between 2 to 100 character")
+    @NotBlank(message = "Description cannot be blank")
+    @Size(min = 1, max = 100, message = "Workspace description must be between 1 and 100 characters")
     private String description;
 
     /*
@@ -28,7 +28,7 @@ public class WorkspaceRequestDto {
     private Visibility visibility;
 
     @Schema(description = "Workspace logo URL", example = "https://cdn.app.com/logo.png")
-    @NotBlank(message = "Name cannot be blank")
-    @Size(min = 2, max = 100, message = "Name must be between 2 to 100 character")
+    @NotBlank(message = "Logo URL cannot be blank")
+    @Size(min = 2, max = 255, message = "Workspace logo URL must be between 2 and 255 characters")
     private String logoUrl;
 }

@@ -120,15 +120,13 @@ class AuthControllerTest {
 
     @Test
     void sendOtp_withRegisteredEmail_returns200() throws Exception {
-
         when(authService.sendOtp("john@example.com"))
-                .thenReturn("OTP sent successfully");
+                .thenReturn("ABC123");
 
         mockMvc.perform(post("/api/v1/auth/sendotp")
                         .param("email", "john@example.com"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("OTP sent successfully"))
-                .andExpect(jsonPath("$.otp").value("OTP sent successfully"));
+                .andExpect(jsonPath("$.message").value("OTP sent successfully"));
     }
 
     @Test

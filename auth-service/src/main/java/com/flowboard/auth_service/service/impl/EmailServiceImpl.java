@@ -1,18 +1,26 @@
 package com.flowboard.auth_service.service.impl;
 
 import com.flowboard.auth_service.service.EmailService;
+import jakarta.mail.AuthenticationFailedException;
+import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.MailAuthenticationException;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.http.HttpHeaders;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 @Slf4j
 @Service
@@ -27,15 +35,67 @@ public class EmailServiceImpl implements EmailService {
     @Value("${brevo.sender.name:FlowBoard}")
     private String senderName;
 
+    @Value("${brevo.enabled:true}")
+    private boolean brevoEnabled;
+
+    @Value("${mail.transport.prefer-smtp:false}")
+    private boolean preferSmtp;
+
+    @Value("${spring.mail.host:}")
+    private String smtpHost;
+
+    @Value("${spring.mail.username:}")
+    private String smtpUsername;
+
+    @Value("${spring.mail.password:}")
+    private String smtpPassword;
+
+    @Value("${spring.mail.port:587}")
+    private int smtpPort;
+
+    @Value("${smtp-auth:true}")
+    private boolean smtpAuth;
+
+    @Value("${smtp-starttls-enable:true}")
+    private boolean smtpStartTlsEnable;
+
     @Value("${admin.verification.mail:}")
     private String adminVerifcationMail;
 
     private final RestTemplate restTemplate;
+    private final JavaMailSender javaMailSender;
 
     public void send(String toEmail, String subject, String htmlContent) {
-        if (apiKey == null || apiKey.isBlank() || senderEmail == null || senderEmail.isBlank()) {
-            log.warn("Brevo email is not configured. Skipping email send for {}", toEmail);
-            return;
+        if (preferSmtp) {
+            if (trySendViaSmtp(toEmail, subject, htmlContent)) {
+                return;
+            }
+
+            if (trySendViaBrevo(toEmail, subject, htmlContent)) {
+                return;
+            }
+        } else {
+            if (trySendViaBrevo(toEmail, subject, htmlContent)) {
+                return;
+            }
+
+            if (trySendViaSmtp(toEmail, subject, htmlContent)) {
+                return;
+            }
+        }
+
+        throw new IllegalStateException("Unable to send email. Configure Brevo or SMTP correctly.");
+    }
+
+    private boolean trySendViaBrevo(String toEmail, String subject, String htmlContent) {
+        if (apiKey != null && apiKey.startsWith("xsmtpsib-")) {
+            log.info("Brevo credential for {} looks like an SMTP key, skipping Brevo REST API and using SMTP fallback", toEmail);
+            return false;
+        }
+
+        if (!brevoEnabled || apiKey == null || apiKey.isBlank() || senderEmail == null || senderEmail.isBlank()) {
+            log.warn("Brevo email is not configured for {}", toEmail);
+            return false;
         }
 
         String url = "https://api.brevo.com/v3/smtp/email";
@@ -67,10 +127,70 @@ public class EmailServiceImpl implements EmailService {
 
             log.info("Brevo Status: {}", response.getStatusCode());
             log.info("Brevo Body: {}", response.getBody());
-
+            return true;
         } catch (Exception e) {
             log.error("Brevo Error: {}", e.getMessage());
+            return false;
         }
+    }
+
+    private boolean trySendViaSmtp(String toEmail, String subject, String htmlContent) {
+        String resolvedHost = smtpHost;
+        String resolvedUsername = smtpUsername;
+        String resolvedPassword = smtpPassword;
+
+        if ((resolvedHost == null || resolvedHost.isBlank() || resolvedUsername == null || resolvedUsername.isBlank() || resolvedPassword == null || resolvedPassword.isBlank())
+                && apiKey != null && apiKey.startsWith("xsmtpsib-")
+                && senderEmail != null && !senderEmail.isBlank()) {
+            resolvedHost = "smtp-relay.brevo.com";
+            resolvedUsername = senderEmail;
+            resolvedPassword = apiKey;
+        }
+
+        if (resolvedHost == null || resolvedHost.isBlank() || resolvedUsername == null || resolvedUsername.isBlank() || resolvedPassword == null || resolvedPassword.isBlank()) {
+            log.warn("SMTP is not configured for {}", toEmail);
+            return false;
+        }
+
+        try {
+            JavaMailSender mailSender = buildMailSender(resolvedHost, resolvedUsername, resolvedPassword);
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+            helper.setTo(toEmail);
+            helper.setSubject(subject);
+            helper.setFrom(senderEmail != null && !senderEmail.isBlank() ? senderEmail : resolvedUsername, senderName);
+            helper.setText(htmlContent, true);
+            mailSender.send(mimeMessage);
+            log.info("SMTP email sent successfully to {}", toEmail);
+            return true;
+        } catch (AuthenticationFailedException | MailAuthenticationException ex) {
+            log.error("SMTP Error: {}", ex.getMessage());
+            throw new IllegalStateException("SMTP authentication failed. Configure smtp-username with your Brevo SMTP login email and smtp-password with your Brevo SMTP key.");
+        } catch (Exception ex) {
+            log.error("SMTP Error: {}", ex.getMessage());
+            return false;
+        }
+    }
+
+    private JavaMailSender buildMailSender(String host, String username, String password) {
+        if (smtpHost != null && !smtpHost.isBlank()
+                && smtpUsername != null && !smtpUsername.isBlank()
+                && smtpPassword != null && !smtpPassword.isBlank()) {
+            return javaMailSender;
+        }
+
+        JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
+        mailSender.setHost(host);
+        mailSender.setPort(smtpPort);
+        mailSender.setUsername(username);
+        mailSender.setPassword(password);
+
+        Properties props = mailSender.getJavaMailProperties();
+        props.put("mail.transport.protocol", "smtp");
+        props.put("mail.smtp.auth", String.valueOf(smtpAuth));
+        props.put("mail.smtp.starttls.enable", String.valueOf(smtpStartTlsEnable));
+        props.put("mail.debug", "false");
+        return mailSender;
     }
 
     @Override

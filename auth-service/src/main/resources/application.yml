@@ -24,6 +24,18 @@ spring:
     hibernate:
       ddl-auto: update
 
+  mail:
+    host: ${smtp-host:}
+    port: ${smtp-port:587}
+    username: ${smtp-username:}
+    password: ${smtp-password:}
+    properties:
+      mail:
+        smtp:
+          auth: ${smtp-auth:true}
+          starttls:
+            enable: ${smtp-starttls-enable:true}
+
 
   management:
     endpoints:
@@ -44,6 +56,12 @@ brevo:
   sender:
     email: ${brevo-sender-mail}
     name: FlowBoard
+
+  enabled: ${brevo-enabled:true}
+
+mail:
+  transport:
+    prefer-smtp: ${mail-transport-prefer-smtp:false}
 
 domain:
   url: "http://localhost:8081/api/v1/"

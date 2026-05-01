@@ -56,6 +56,10 @@ public class PaymentServiceImpl implements PaymentService {
             throw new PaymentException("You already have an active subscription");
         }
 
+        if (isPlaceholderRazorpayConfig()) {
+            throw new PaymentException("Razorpay keys are not configured. Add razorpay_key_id and razorpay_key_secret before taking payment.");
+        }
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set(HttpHeaders.AUTHORIZATION, buildBasicAuthHeader());
@@ -78,7 +82,7 @@ public class PaymentServiceImpl implements PaymentService {
             );
         } catch (Exception ex) {
             log.error("Razorpay order creation failed for user {}", userId, ex);
-            throw new PaymentException("Unable to create Razorpay order right now");
+            throw new PaymentException("Unable to create Razorpay order right now. Check Razorpay key id/secret and internet access from payment-service.");
         }
 
         if (response == null || response.get("id") == null) {
@@ -166,6 +170,15 @@ public class PaymentServiceImpl implements PaymentService {
     private String buildBasicAuthHeader() {
         String credentials = razorpayKeyId + ":" + razorpayKeySecret;
         return "Basic " + Base64.getEncoder().encodeToString(credentials.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private boolean isPlaceholderRazorpayConfig() {
+        return razorpayKeyId == null
+                || razorpayKeyId.isBlank()
+                || razorpayKeySecret == null
+                || razorpayKeySecret.isBlank()
+                || "rzp_test_flowboard".equals(razorpayKeyId)
+                || "flowboard_test_secret".equals(razorpayKeySecret);
     }
 
     private String hmacSha256(String data, String secret) {

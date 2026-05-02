@@ -48,5 +48,7 @@ public interface BoardService {
 
     Boolean isPrivate(Integer boardId);
 
-    // public CustomPageResponse<BoardResponseDto> getPublicBoardsForWorkspace(Integer workspaceId, Integer userId);
+    CustomPageResponse<BoardResponseDto> getAllBoards(int page, int size, String sort, String direction);
+
+    void deleteBoardAsAdmin(Integer boardId);
 }

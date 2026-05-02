@@ -54,7 +54,7 @@ class AuthControllerTest {
     @Test
     void signup_withValidData_returns201() throws Exception {
         SignupDto signupDto = new SignupDto("John Doe", "john@example.com", "Password@1");
-        UserDto userDto = new UserDto("John Doe", "john@example.com", "url", 1, false);
+        UserDto userDto = new UserDto("John Doe", "john@example.com", "url", 1, false, null);
 
         when(authService.register(any(SignupDto.class))).thenReturn(userDto);
 

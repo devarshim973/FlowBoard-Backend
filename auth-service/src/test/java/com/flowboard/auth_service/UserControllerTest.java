@@ -44,7 +44,7 @@ class UserControllerTest {
     @Test
     void getUserByEmail_withValidEmail_returns200() throws Exception {
 
-        UserDto dto = new UserDto("John", "john@gmail.com", "url", 1, false);
+        UserDto dto = new UserDto("John", "john@gmail.com", "url", 1, false, null);
 
         when(userService.getUserByEmail("john@gmail.com")).thenReturn(dto);
 
@@ -66,7 +66,7 @@ class UserControllerTest {
     @Test
     void getUserById_withValidId_returns200() throws Exception {
 
-        UserDto dto = new UserDto("John", "john@gmail.com", "url", 1, false);
+        UserDto dto = new UserDto("John", "john@gmail.com", "url", 1, false, null);
 
         when(userService.getUserById(1)).thenReturn(dto);
 
@@ -112,7 +112,7 @@ class UserControllerTest {
     void updateProfile_withValidData_returns202() throws Exception {
 
         UserUpdateDto request = new UserUpdateDto("Updated John", "newUrl");
-        UserDto response = new UserDto("Updated John", "john@gmail.com", "newUrl", 1, false);
+        UserDto response = new UserDto("Updated John", "john@gmail.com", "newUrl", 1, false, null);
 
         when(userService.updateProfile(any(), any(UserUpdateDto.class)))
                 .thenReturn(response);
@@ -138,7 +138,7 @@ class UserControllerTest {
     @Test
     void updateAvatar_withValidData_returns202() throws Exception {
 
-        UserDto dto = new UserDto("John", "john@gmail.com", "newUrl", 1, false);
+        UserDto dto = new UserDto("John", "john@gmail.com", "newUrl", 1, false, null);
 
         when(userService.updateAvatarUrl(1, "newUrl")).thenReturn(dto);
 
@@ -161,8 +161,8 @@ class UserControllerTest {
     void getBulkUsers_withValidIds_returns200() throws Exception {
 
         List<UserDto> users = List.of(
-                new UserDto("John", "john@gmail.com", "url", 1, false),
-                new UserDto("Sam", "sam@gmail.com", "url", 2, false)
+                new UserDto("John", "john@gmail.com", "url", 1, false, null),
+                new UserDto("Sam", "sam@gmail.com", "url", 2, false, null)
         );
 
         when(userService.getBulkUser(any())).thenReturn(users);

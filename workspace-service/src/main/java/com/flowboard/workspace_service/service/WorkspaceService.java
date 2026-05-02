@@ -31,4 +31,8 @@ public interface WorkspaceService {
     WorkspaceResponseDto findById(Integer workspaceId, Integer userid);
 
     Boolean checkModificationAccess(Integer workspaceId, Integer userId);
+
+    CustomPageResponse<WorkspaceResponseDto> getAllWorkspaces(int page, int size, String by, String direction);
+
+    void deleteWorkspaceAsAdmin(Integer workspaceId);
 }

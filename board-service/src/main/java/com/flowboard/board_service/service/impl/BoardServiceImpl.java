@@ -238,6 +238,24 @@ public class BoardServiceImpl implements BoardService {
         return getBoard(boardId).getVisibility().equals(Visibility.PRIVATE);
     }
 
+    @Override
+    public CustomPageResponse<BoardResponseDto> getAllBoards(int page, int size, String by, String direction) {
+        Sort sort = direction.equalsIgnoreCase("asc")
+                ? Sort.by(by).ascending()
+                : Sort.by(by).descending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<Board> boardPage = boardRepository.findAll(pageable);
+        Page<BoardResponseDto> dtoPage = boardPage.map(boardResponseMapper::mapTo);
+        return new CustomPageResponse<>(dtoPage);
+    }
+
+    @Override
+    public void deleteBoardAsAdmin(Integer boardId) {
+        boardRepository.delete(getBoard(boardId));
+        log.info("Admin deleted board {}", boardId);
+    }
+
     private Board getBoard(Integer id) {
         return boardRepository.findById(id)
                 .orElseThrow(() -> new BoardNotFoundException("Board not found with id " + id.toString()));

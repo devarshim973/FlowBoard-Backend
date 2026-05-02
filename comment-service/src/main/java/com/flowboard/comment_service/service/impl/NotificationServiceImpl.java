@@ -35,8 +35,15 @@ public class NotificationServiceImpl implements NotificationService {
     @Value("${rabbitmq.routing.bulk.key}")
     private String bulkRoutingKey;
 
+    @Value("${app.rabbitmq.enabled:false}")
+    private boolean rabbitmqEnabled;
+
     @Override
     public void sendNotification(Integer cardId, String content, Integer currentUserId) {
+        if (!rabbitmqEnabled) {
+            log.info("RabbitMQ is disabled; skipping comment notifications");
+            return;
+        }
         List<String> mentions = extractMentions(content);
         List<Integer> mentionedUserIds = userClient.getUserIdsByUsername(mentions);
         log.info("Returned user ids from user service : " + mentionedUserIds.toString());

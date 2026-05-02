@@ -140,15 +140,15 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public String sendOtp(String email) {
+    public void sendOtp(String email) {
         log.info("Password reset OTP requested for email {}", email);
-        return userOtpService.sendOtp(email);
+        userOtpService.sendOtp(email);
     }
 
     @Override
-    public String sendSignupOtp(String email) {
+    public void sendSignupOtp(String email) {
         log.info("Signup OTP requested for email {}", email);
-        return userOtpService.sendSignupOtp(email);
+        userOtpService.sendSignupOtp(email);
     }
 
     @Override

@@ -14,6 +14,7 @@ import com.flowboard.auth_service.utils.AppConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -27,8 +28,10 @@ public class UserOtpServiceImpl implements UserOtpService {
     private final UserOtpRepository userOtpRepository;
     private final SignupOtpRepository signupOtpRepository;
     private final EmailService emailService;
+
     @Override
-    public String sendOtp(String email) {
+    @Transactional
+    public void sendOtp(String email) {
         log.info("OTP send requested for email {}", email);
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("User does not exist with email " + email));
@@ -45,15 +48,15 @@ public class UserOtpServiceImpl implements UserOtpService {
             userOtpRepository.save(userOtp);
             emailService.sendOtpEmail(email, otp);
             log.info("OTP sent to user {}", user.getUserId());
-            return otp;
+            return;
         }
         else {
             UserOtp userOtp = userOtpOptional.get();
             LocalDateTime now = LocalDateTime.now();
 
-            if(userOtp.getLastOtpDateTime().plusMinutes(5).isAfter(now)) {
+            if(userOtp.getLastOtpDateTime().plusSeconds(AppConstants.otpResendCooldownSeconds).isAfter(now)) {
                 log.warn("OTP resend blocked for user {}", user.getUserId());
-                throw new OtpException("You can send new OTP after 5 minutes");
+                throw new OtpException("You can send new OTP after 10 seconds");
             }
             if(userOtp.getOtpSent() >= AppConstants.otpLimit) {
                 log.warn("OTP limit reached for user {}", user.getUserId());
@@ -65,12 +68,13 @@ public class UserOtpServiceImpl implements UserOtpService {
             userOtpRepository.save(userOtp);
             emailService.sendOtpEmail(user.getEmail(), otp);
             log.info("OTP resent to user {}", user.getUserId());
-            return otp;
+            return;
         }
     }
 
     @Override
-    public String sendSignupOtp(String email) {
+    @Transactional
+    public void sendSignupOtp(String email) {
         log.info("Signup OTP send requested for email {}", email);
 
         userRepository.findByEmail(email).ifPresent(existingUser -> {
@@ -90,14 +94,14 @@ public class UserOtpServiceImpl implements UserOtpService {
                     .build();
             signupOtpRepository.save(signupOtp);
             emailService.sendSignupOtpEmail(email, otp);
-            return otp;
+            return;
         }
 
         SignupOtp signupOtp = signupOtpOptional.get();
         LocalDateTime now = LocalDateTime.now();
 
-        if (signupOtp.getLastOtpDateTime() != null && signupOtp.getLastOtpDateTime().plusMinutes(5).isAfter(now)) {
-            throw new OtpException("You can send new OTP after 5 minutes");
+        if (signupOtp.getLastOtpDateTime() != null && signupOtp.getLastOtpDateTime().plusSeconds(AppConstants.otpResendCooldownSeconds).isAfter(now)) {
+            throw new OtpException("You can send new OTP after 10 seconds");
         }
 
         if (signupOtp.getOtpSent() >= AppConstants.otpLimit) {
@@ -108,7 +112,6 @@ public class UserOtpServiceImpl implements UserOtpService {
         signupOtp.setOtp(otp);
         signupOtpRepository.save(signupOtp);
         emailService.sendSignupOtpEmail(email, otp);
-        return otp;
     }
 
     @Override

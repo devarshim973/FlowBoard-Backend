@@ -38,10 +38,9 @@ public class AuthController {
     @ApiResponse(responseCode = "200", description = "Signup OTP sent successfully")
     @PostMapping("/signup/send-otp")
     public ResponseEntity<Map<String, String>> sendSignupOtp(@RequestParam String email) {
-        String otp = authService.sendSignupOtp(email);
+        authService.sendSignupOtp(email);
         return ResponseEntity.ok().body(Map.of(
-                "message", "Signup OTP sent successfully",
-                "otp", otp
+                "message", "Signup OTP sent successfully"
         ));
     }
 
@@ -65,10 +64,9 @@ public class AuthController {
     @ApiResponse(responseCode = "200", description = "OTP sent successfully")
     @PostMapping("/sendotp")
     public ResponseEntity<Map<String, String>> sendOtp(@RequestParam String email) {
-        String otp = authService.sendOtp(email);
+        authService.sendOtp(email);
         return ResponseEntity.ok().body(Map.of(
-                "message", "OTP sent successfully",
-                "otp", otp
+                "message", "OTP sent successfully"
         ));
     }
 

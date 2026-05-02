@@ -36,6 +36,10 @@ spring:
       health:
         show-details: always
 
+app:
+  rabbitmq:
+    enabled: ${RABBITMQ_ENABLED:false}
+
 security:
   jwt:
     secret: ${jwt-secret-key}

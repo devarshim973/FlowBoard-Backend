@@ -11,4 +11,7 @@ public class AppConstants {
 
     /* Otp limit for a single day */
     public static final int otpLimit = 5;
+
+    /* Cooldown before a new OTP can be requested */
+    public static final int otpResendCooldownSeconds = 10;
 }

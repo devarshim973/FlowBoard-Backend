@@ -6,6 +6,7 @@ import com.flowboard.auth_service.dto.ForgetPasswordDto;
 import com.flowboard.auth_service.dto.LoginDto;
 import com.flowboard.auth_service.dto.SignupDto;
 import com.flowboard.auth_service.dto.UserDto;
+import com.flowboard.auth_service.entity.ROLE;
 import com.flowboard.auth_service.entity.User;
 import com.flowboard.auth_service.entity.UserOtp;
 import com.flowboard.auth_service.entity.UserVerification;
@@ -25,7 +26,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -34,9 +34,14 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceImplTest {
@@ -153,11 +158,11 @@ class AuthServiceImplTest {
 
     @Test
     void login_withValidData_returnsToken() {
-
         LoginDto loginDto = new LoginDto("john@gmail.com", "Password@1");
 
         User user = new User();
         user.setUserId(1);
+        user.setRole(ROLE.USER);
 
         Authentication auth = mock(Authentication.class);
 
@@ -177,7 +182,6 @@ class AuthServiceImplTest {
 
     @Test
     void login_withWrongEmail_throwsException() {
-
         LoginDto loginDto = new LoginDto("wrong@gmail.com", "Password@1");
 
         Authentication auth = mock(Authentication.class);
@@ -194,7 +198,6 @@ class AuthServiceImplTest {
 
     @Test
     void verify_withValidToken_updatesUser() {
-
         UserVerification verification = UserVerification.builder()
                 .userId(1)
                 .token("abc")
@@ -219,20 +222,15 @@ class AuthServiceImplTest {
 
     @Test
     void sendOtp_withValidEmail_callsService() {
+        doNothing().when(userOtpService).sendOtp("john@gmail.com");
 
-        when(userOtpService.sendOtp("john@gmail.com"))
-                .thenReturn("123456");
-
-        String result = authService.sendOtp("john@gmail.com");
-
-        assertEquals("123456", result);   // ✅ important
+        authService.sendOtp("john@gmail.com");
 
         verify(userOtpService).sendOtp("john@gmail.com");
     }
-    
+
     @Test
     void changePassword_withValidOtp_updatesPassword() {
-
         ForgetPasswordDto dto =
                 new ForgetPasswordDto("john@gmail.com", "123456", "NewPass@1");
 
@@ -260,7 +258,6 @@ class AuthServiceImplTest {
 
     @Test
     void changePassword_withWrongOtp_throwsException() {
-
         ForgetPasswordDto dto =
                 new ForgetPasswordDto("john@gmail.com", "999999", "NewPass@1");
 
@@ -284,7 +281,6 @@ class AuthServiceImplTest {
 
     @Test
     void changePassword_withExpiredOtp_throwsException() {
-
         ForgetPasswordDto dto =
                 new ForgetPasswordDto("john@gmail.com", "123456", "NewPass@1");
 

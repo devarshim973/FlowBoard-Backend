@@ -25,7 +25,9 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(
         value = AuthController.class,
@@ -99,7 +101,6 @@ class AuthControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
-
     @Test
     void verifyAccount_withValidToken_returns202() throws Exception {
         doNothing().when(authService).verify("valid-token-123");
@@ -120,15 +121,12 @@ class AuthControllerTest {
 
     @Test
     void sendOtp_withRegisteredEmail_returns200() throws Exception {
-
-        when(authService.sendOtp("john@example.com"))
-                .thenReturn("OTP sent successfully");
+        doNothing().when(authService).sendOtp("john@example.com");
 
         mockMvc.perform(post("/api/v1/auth/sendotp")
                         .param("email", "john@example.com"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("OTP sent successfully"))
-                .andExpect(jsonPath("$.otp").value("OTP sent successfully"));
+                .andExpect(jsonPath("$.message").value("OTP sent successfully"));
     }
 
     @Test
@@ -141,10 +139,8 @@ class AuthControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
-
     @Test
     void forgetPassword_withValidOtp_returns200() throws Exception {
-        // email, otp, newPassword  ← matches ForgetPasswordDto field order
         ForgetPasswordDto dto = new ForgetPasswordDto("john@example.com", "123456", "NewPass@123");
         doNothing().when(authService).changePassword(any(ForgetPasswordDto.class));
 

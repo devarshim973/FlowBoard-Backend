@@ -1,75 +1,64 @@
 package com.flowboard.auth_service.service.impl;
 
+import com.flowboard.auth_service.exception.OtpException;
 import com.flowboard.auth_service.service.EmailService;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.MailAuthenticationException;
+import org.springframework.mail.MailException;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.stereotype.Service;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.http.HttpHeaders;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class EmailServiceImpl implements EmailService {
-    @Value("${brevo.api-key:}")
-    private String apiKey;
+    @Value("${spring.mail.username:}")
+    private String smtpUsername;
 
-    @Value("${brevo.sender.email:}")
+    @Value("${app.mail.from.email:}")
     private String senderEmail;
 
-    @Value("${brevo.sender.name:FlowBoard}")
+    @Value("${app.mail.from.name:FlowBoard}")
     private String senderName;
 
     @Value("${admin.verification.mail:}")
     private String adminVerifcationMail;
 
-    private final RestTemplate restTemplate;
+    private final JavaMailSender mailSender;
 
     public void send(String toEmail, String subject, String htmlContent) {
-        if (apiKey == null || apiKey.isBlank() || senderEmail == null || senderEmail.isBlank()) {
-            log.warn("Brevo email is not configured. Skipping email send for {}", toEmail);
-            return;
+        if (smtpUsername == null || smtpUsername.isBlank() || senderEmail == null || senderEmail.isBlank()) {
+            log.warn("SMTP email is not configured. Skipping email send for {}", toEmail);
+            throw new OtpException("SMTP email is not configured. Set SMTP_USERNAME, SMTP_APP_PASSWORD, and SMTP_FROM_EMAIL before sending OTP emails.");
         }
 
-        String url = "https://api.brevo.com/v3/smtp/email";
-
-        Map<String, Object> body = new HashMap<>();
-
-        body.put("sender", Map.of(
-                "email", senderEmail,
-                "name", senderName
-        ));
-
-        body.put("to", List.of(
-                Map.of("email", toEmail)
-        ));
-
-        body.put("subject", subject);
-        body.put("htmlContent", htmlContent);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("api-key", apiKey);
-
-        HttpEntity<Map<String, Object>> request =
-                new HttpEntity<>(body, headers);
-
         try {
-            ResponseEntity<String> response =
-                    restTemplate.postForEntity(url, request, String.class);
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom(senderEmail, senderName);
+            helper.setTo(toEmail);
+            helper.setSubject(subject);
+            helper.setText(htmlContent, true);
 
-            log.info("Brevo Status: {}", response.getStatusCode());
-            log.info("Brevo Body: {}", response.getBody());
-
+            mailSender.send(message);
+            log.info("SMTP mail sent successfully to {}", toEmail);
+        } catch (MailAuthenticationException e) {
+            log.error("SMTP authentication error: {}", e.getMessage());
+            throw new OtpException("SMTP authentication failed. Check SMTP_USERNAME and SMTP_APP_PASSWORD.");
+        } catch (MessagingException e) {
+            log.error("SMTP message build error: {}", e.getMessage());
+            throw new OtpException("SMTP message could not be created. Check sender and recipient email values.");
+        } catch (MailException e) {
+            log.error("SMTP mail error: {}", e.getMessage());
+            throw new OtpException("Unable to send email via SMTP. Check Gmail SMTP settings and the app password.");
         } catch (Exception e) {
-            log.error("Brevo Error: {}", e.getMessage());
+            log.error("SMTP unexpected error: {}", e.getMessage());
+            throw new OtpException("Unexpected SMTP error while sending email.");
         }
     }
 

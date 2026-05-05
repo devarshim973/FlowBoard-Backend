@@ -1,0 +1,52 @@
+server:
+  port: 8091
+
+spring:
+  application:
+    name: admin-service
+
+  cloud:
+    openfeign:
+      circuitbreaker:
+        enabled: true
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/flow_board_auth_service_db
+    username: root
+    password: ${DB_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+
+security:
+  jwt:
+    secret: ${JWT_SECRET_KEY}
+
+admin:
+  email: devarshim973@gmail.com
+  password: Devarshi@1
+
+services:
+  workspace:
+    url: http://localhost:8084
+  board:
+    url: http://localhost:8085
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true

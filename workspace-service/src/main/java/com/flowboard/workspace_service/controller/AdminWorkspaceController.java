@@ -27,15 +27,17 @@ public class AdminWorkspaceController {
 
     @DeleteMapping("/{workspaceId}")
     public ResponseEntity<String> deleteWorkspace(@RequestHeader("X-User-Role") String role,
-                                                  @PathVariable Integer workspaceId) {
+                                                  @PathVariable("workspaceId") Integer workspaceId) {
         ensureAdmin(role);
         workspaceService.deleteWorkspaceAsAdmin(workspaceId);
         return ResponseEntity.ok("Workspace deleted successfully");
     }
 
     private void ensureAdmin(String role) {
-        if (!"PLATFORM_ADMIN".equals(role)) {
+        String normalizedRole = role == null ? "" : role.split(",")[0].trim().toUpperCase();
+        if (!"PLATFORM_ADMIN".equals(normalizedRole) && !"ADMIN".equals(normalizedRole)) {
             throw new IllegalArgumentException("Admin access required");
         }
     }
 }
+

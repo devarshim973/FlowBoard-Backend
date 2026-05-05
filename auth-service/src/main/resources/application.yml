@@ -19,7 +19,6 @@ spring:
             client-id: ${GOOGLE_CLIENT_ID}
             client-secret: ${GOOGLE_CLIENT_SECRET}
 
-
   jpa:
     hibernate:
       ddl-auto: update
@@ -52,6 +51,10 @@ security:
   jwt:
     secret: ${JWT_SECRET_KEY}
 
+admin:
+  email: devarshim973@gmail.com
+  password: $2a$10$EfYecqasrVgIE4uZyeGhBOZd7OsMWUGtIsNxToQAtVYkwfXLrPF0C
+
 app:
   mail:
     from:
@@ -69,3 +72,5 @@ eureka:
     fetch-registry: true
   instance:
     prefer-ip-address: true
+
+

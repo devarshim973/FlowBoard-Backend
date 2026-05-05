@@ -17,25 +17,27 @@ public class AdminBoardController {
     @GetMapping
     public ResponseEntity<CustomPageResponse<BoardResponseDto>> getAllBoards(
             @RequestHeader("X-User-Role") String role,
-            @RequestParam(defaultValue = AppConstants.page) Integer page,
-            @RequestParam(defaultValue = AppConstants.size) Integer size,
-            @RequestParam(defaultValue = AppConstants.sortBoard) String by,
-            @RequestParam(defaultValue = AppConstants.direction) String direction) {
+            @RequestParam(name = "page", defaultValue = AppConstants.page) Integer page,
+            @RequestParam(name = "size", defaultValue = AppConstants.size) Integer size,
+            @RequestParam(name = "by", defaultValue = AppConstants.sortBoard) String by,
+            @RequestParam(name = "direction", defaultValue = AppConstants.direction) String direction) {
         ensureAdmin(role);
         return ResponseEntity.ok(boardService.getAllBoards(page, size, by, direction));
     }
 
     @DeleteMapping("/{boardId}")
     public ResponseEntity<String> deleteBoard(@RequestHeader("X-User-Role") String role,
-                                              @PathVariable Integer boardId) {
+                                              @PathVariable("boardId") Integer boardId) {
         ensureAdmin(role);
         boardService.deleteBoardAsAdmin(boardId);
         return ResponseEntity.ok("Board deleted successfully");
     }
 
     private void ensureAdmin(String role) {
-        if (!"PLATFORM_ADMIN".equals(role)) {
+        String normalizedRole = role == null ? "" : role.split(",")[0].trim().toUpperCase();
+        if (!"PLATFORM_ADMIN".equals(normalizedRole) && !"ADMIN".equals(normalizedRole)) {
             throw new IllegalArgumentException("Admin access required");
         }
     }
 }
+

@@ -34,7 +34,7 @@ spring:
             - Path=/api/v1/user/**
 
         - id: admin-service
-          uri: lb://AUTH-SERVICE
+          uri: lb://ADMIN-SERVICE
           predicates:
             - Path=/api/v1/admin/**
 
@@ -112,10 +112,3 @@ eureka:
 security:
   jwt:
     secret: ${jwt-secret-key}
-
-
-
-
-
-
-

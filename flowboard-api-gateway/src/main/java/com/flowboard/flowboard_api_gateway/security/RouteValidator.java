@@ -19,7 +19,8 @@ public class RouteValidator {
             "/oauth2/authorization/google",
             "/api/v1/subscriptions/details",
             "/login/oauth2/code/google",
-            "/api/v1/auth/register-admin"
+            "/api/v1/auth/register-admin",
+            "/api/v1/admin/login"
     );
     public Predicate<String> isSecured =
             uri -> {

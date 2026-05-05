@@ -2,6 +2,7 @@ package com.flowboard.auth_service.service.impl;
 
 import com.flowboard.auth_service.Mapper.impl.SignupRequestMapper;
 import com.flowboard.auth_service.Mapper.impl.UserResponseMapper;
+import com.flowboard.auth_service.config.AdminBootstrapConfig;
 import com.flowboard.auth_service.dto.ForgetPasswordDto;
 import com.flowboard.auth_service.dto.LoginDto;
 import com.flowboard.auth_service.dto.SignupDto;
@@ -39,6 +40,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Slf4j
 public class AuthServiceImpl implements AuthService {
+    private static final Integer CONFIG_ADMIN_USER_ID = -1;
+
     private final UserRepository userRepository;
     private final SignupRequestMapper signupRequestMapper;
     private final UserResponseMapper userResponseMapper;
@@ -51,6 +54,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserOtpService userOtpService;
     private final UserOtpRepository userOtpRepository;
     private final UserVerificationRepository userVerificationRepository;
+    private final AdminBootstrapConfig adminConfig;
 
     @Value("${domain.url}")
     private String url;
@@ -59,6 +63,10 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public UserDto register(SignupDto signupDto) {
         log.info("User signup requested for email {}", signupDto.getEmail());
+
+        if (isConfiguredAdminEmail(signupDto.getEmail())) {
+            throw new UserNotFoundException("This email is reserved for admin login only");
+        }
 
         Optional<User> userOptional = userRepository.findByEmail(signupDto.getEmail());
 
@@ -89,35 +97,19 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public UserDto registerAdmin(SignupDto signupDto) {
-        log.info("Admin signup requested for email {}", signupDto.getEmail());
-        Optional<User> userOptional = userRepository.findByEmail(signupDto.getEmail());
-        if (userOptional.isPresent()) {
-            log.warn("Admin signup rejected because user already exists for email {}", signupDto.getEmail());
-            throw new UserNotFoundException("User already exist with email " + signupDto.getEmail());
-        }
-
-        User user = signupRequestMapper.mapTo(signupDto);
-        user.setRole(ROLE.PLATFORM_ADMIN);
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        User savedUser = userRepository.save(user);
-
-        String token = UUID.randomUUID().toString();
-        UserVerification userVerification = UserVerification.builder()
-                .userId(savedUser.getUserId())
-                .token(token)
-                .build();
-
-        UserVerification savedUserVerification = userVerificationService.save(userVerification);
-
-        emailService.sendVerificationEmailForAdmin(user.getEmail(), url + "auth/verify/" + savedUserVerification.getToken());
-        log.info("Admin signup completed for user {}", savedUser.getUserId());
-
-        return userResponseMapper.mapTo(savedUser);
+        log.warn("Admin registration attempt blocked for email {}", signupDto.getEmail());
+        throw new IllegalArgumentException("Admin registration is disabled. Configure admin credentials in application.yml.");
     }
 
     @Override
     public String login(LoginDto loginDto) {
         log.info("Login requested for email {}", loginDto.getEmail());
+
+        if (isConfiguredAdmin(loginDto)) {
+            log.info("Config admin login successful for {}", loginDto.getEmail());
+            return jwtService.generateToken(loginDto.getEmail(), "ADMIN", CONFIG_ADMIN_USER_ID);
+        }
+
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginDto.getEmail(), loginDto.getPassword())
         );
@@ -148,6 +140,9 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public void sendSignupOtp(String email) {
         log.info("Signup OTP requested for email {}", email);
+        if (isConfiguredAdminEmail(email)) {
+            throw new IllegalArgumentException("Admin email cannot be used for user signup");
+        }
         userOtpService.sendSignupOtp(email);
     }
 
@@ -180,5 +175,21 @@ public class AuthServiceImpl implements AuthService {
         user.setPassword(passwordEncoder.encode(forgetPasswordDto.getNewPassword()));
         userRepository.save(user);
         log.info("Password reset completed for user {}", user.getUserId());
+    }
+
+    private boolean isConfiguredAdmin(LoginDto loginDto) {
+        if (!isConfiguredAdminEmail(loginDto.getEmail())) {
+            return false;
+        }
+
+        if (adminConfig.getPassword() == null || adminConfig.getPassword().isBlank()) {
+            throw new IllegalArgumentException("Admin password hash is missing in application.yml");
+        }
+
+        return passwordEncoder.matches(loginDto.getPassword(), adminConfig.getPassword());
+    }
+
+    private boolean isConfiguredAdminEmail(String email) {
+        return adminConfig.getEmail() != null && adminConfig.getEmail().equalsIgnoreCase(email);
     }
 }

@@ -1,0 +1,58 @@
+package com.flowboard.card_service.service.impl;
+
+import com.flowboard.card_service.dto.BulkNotificationRequestDto;
+import com.flowboard.card_service.dto.NotificationRequestDto;
+import com.flowboard.card_service.service.NotificationProcedure;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+@Component
+@RequiredArgsConstructor
+@Slf4j
+public class NotificationProducerImpl implements NotificationProcedure {
+
+    private final RabbitTemplate rabbitTemplate;
+
+    @Value("${rabbitmq.exchange.name}")
+    private String exchange;
+
+    @Value("${rabbitmq.routing.single.key}")
+    private String singleRoutingKey;
+
+    @Value("${rabbitmq.routing.bulk.key}")
+    private String bulkRoutingKey;
+
+    @Value("${app.rabbitmq.enabled:false}")
+    private boolean rabbitmqEnabled;
+
+    @Override
+    public void sendBulk(BulkNotificationRequestDto message) {
+        if (!rabbitmqEnabled) {
+            log.info("RabbitMQ is disabled; skipping bulk notification publish");
+            return;
+        }
+        try {
+            log.info("Added a bulk notification in queue");
+            rabbitTemplate.convertAndSend(exchange, bulkRoutingKey, message);
+        } catch (Exception ex) {
+            log.error("Bulk notification publish failed: {}", ex.getMessage());
+        }
+    }
+
+    @Override
+    public void sendSingle(NotificationRequestDto message) {
+        if (!rabbitmqEnabled) {
+            log.info("RabbitMQ is disabled; skipping single notification publish");
+            return;
+        }
+        try {
+            log.info("Added a single notification in queue");
+            rabbitTemplate.convertAndSend(exchange, singleRoutingKey, message);
+        } catch (Exception ex) {
+            log.error("Single notification publish failed: {}", ex.getMessage());
+        }
+    }
+}

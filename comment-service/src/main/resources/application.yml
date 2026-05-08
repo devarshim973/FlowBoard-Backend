@@ -1,0 +1,82 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: comment-service
+
+  cloud:
+    openfeign:
+      circuitbreaker:
+        enabled: true
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/flow_board_comment_service_db
+    username: root
+    password: ${db_password}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+
+
+  management:
+    endpoints:
+      web:
+        exposure:
+          include: "*"
+
+    endpoint:
+      health:
+        show-details: always
+
+app:
+  rabbitmq:
+    enabled: ${RABBITMQ_ENABLED:false}
+
+security:
+  jwt:
+    secret: ${jwt-secret-key}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+
+rabbitmq:
+  exchange:
+    name: notification-exchange
+  queue:
+    single:
+      name: single-notification-queue
+    bulk:
+      name: bulk-notification-queue
+  routing:
+    single:
+      key: single-notification-key
+    bulk:
+      key: bulk-notification-key
+
+cloudinary:
+  cloud-name: ${cloudinary-cloud-name}
+  api-key: ${cloudinary-api-key}
+  api-secret: ${cloudinary-api-secret}
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      AUTH-SERVICE:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 3

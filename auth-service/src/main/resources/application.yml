@@ -1,0 +1,79 @@
+server:
+  port: 8081
+  forward-headers-strategy: framework
+
+spring:
+  application:
+    name: auth-service
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/flow_board_auth_service_db
+    username: root
+    password: ${DB_PASSWORD}
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            redirect-uri: ${GOOGLE_REDIRECT_URI:http://localhost:8081/login/oauth2/code/google}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${SMTP_USERNAME}
+    password: ${SMTP_APP_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+  health:
+    mail:
+      enabled: false
+
+security:
+  jwt:
+    secret: ${JWT_SECRET_KEY}
+
+admin:
+  email: devarshim973@gmail.com
+  password: $2a$10$EfYecqasrVgIE4uZyeGhBOZd7OsMWUGtIsNxToQAtVYkwfXLrPF0C
+
+app:
+  frontend:
+    url: ${FRONTEND_URL:http://localhost:5173}
+  mail:
+    from:
+      email: ${SMTP_FROM_EMAIL}
+      name: ${SMTP_FROM_NAME:FlowBoard}
+
+domain:
+  url: "http://localhost:8081/api/v1/"
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+
+

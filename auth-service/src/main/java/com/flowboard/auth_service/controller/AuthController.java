@@ -38,10 +38,9 @@ public class AuthController {
     @ApiResponse(responseCode = "200", description = "Signup OTP sent successfully")
     @PostMapping("/signup/send-otp")
     public ResponseEntity<Map<String, String>> sendSignupOtp(@RequestParam String email) {
-        String otp = authService.sendSignupOtp(email);
+        authService.sendSignupOtp(email);
         return ResponseEntity.ok().body(Map.of(
-                "message", "Signup OTP sent successfully",
-                "otp", otp
+                "message", "Signup OTP sent successfully"
         ));
     }
 
@@ -65,10 +64,9 @@ public class AuthController {
     @ApiResponse(responseCode = "200", description = "OTP sent successfully")
     @PostMapping("/sendotp")
     public ResponseEntity<Map<String, String>> sendOtp(@RequestParam String email) {
-        String otp = authService.sendOtp(email);
+        authService.sendOtp(email);
         return ResponseEntity.ok().body(Map.of(
-                "message", "OTP sent successfully",
-                "otp", otp
+                "message", "OTP sent successfully"
         ));
     }
 
@@ -80,8 +78,8 @@ public class AuthController {
         return ResponseEntity.ok().body("Password changed successfully");
     }
 
-    @Operation(summary = "Admin signup", description = "Register as admin")
-    @ApiResponse(responseCode = "201", description = "Admin registration request successful")
+    @Operation(summary = "Admin signup disabled", description = "Admin account must come from configuration")
+    @ApiResponse(responseCode = "400", description = "Admin registration disabled")
     @PostMapping("/register-admin")
     public ResponseEntity<UserDto> registerAdmin(@Valid @RequestBody SignupDto signupDto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(authService.registerAdmin(signupDto));
@@ -90,6 +88,6 @@ public class AuthController {
     @GetMapping("/is-admin")
     public ResponseEntity<Boolean> handleIsAdmin(@RequestHeader("X-User-Role") String loggedUserRole) {
         log.info(loggedUserRole);
-        return ResponseEntity.ok().body(loggedUserRole.equals("PLATFORM_ADMIN"));
+        return ResponseEntity.ok().body(loggedUserRole.equals("ADMIN") || loggedUserRole.equals("PLATFORM_ADMIN"));
     }
 }

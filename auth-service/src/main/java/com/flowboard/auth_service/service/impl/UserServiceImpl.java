@@ -157,7 +157,11 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void deleteUser(Integer userId) {
-        userRepository.deleteById(userId);
+        User user = getUser(userId);
+        if (user.getRole() == ROLE.PLATFORM_ADMIN) {
+            throw new IllegalArgumentException("Platform admin account cannot be deleted");
+        }
+        userRepository.delete(user);
     }
 
     @Override
@@ -222,3 +226,4 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
     }
 }
+

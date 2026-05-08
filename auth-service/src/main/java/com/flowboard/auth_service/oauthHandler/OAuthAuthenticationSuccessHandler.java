@@ -11,8 +11,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -33,6 +33,8 @@ public class OAuthAuthenticationSuccessHandler extends SimpleUrlAuthenticationSu
     private final UserRepository userRepo;
     private final UserDetailsService userDetailsService;
     private final BCryptPasswordEncoder passwordEncoder;
+    @Value("${app.frontend.url:http://localhost:5173}")
+    private String frontendUrl;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
@@ -68,11 +70,9 @@ public class OAuthAuthenticationSuccessHandler extends SimpleUrlAuthenticationSu
             }
             userId = userOptional.get().getUserId();
         }
-
-        UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+        userDetailsService.loadUserByUsername(email);
         String token = jwtService.generateToken(email, "USER", userId);
-
-        String redirectUrl = "http://localhost:4200/oauth-success?token=" + token;
+        String redirectUrl = frontendUrl + "/oauth-success?token=" + token;
 
         getRedirectStrategy().sendRedirect(request, response, redirectUrl);
     }

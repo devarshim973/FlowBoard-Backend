@@ -22,4 +22,7 @@ public class UserDto {
     private Integer userId;
 
     private boolean isActive;
+
+    @Schema(description = "User role", example = "USER")
+    private String role;
 }

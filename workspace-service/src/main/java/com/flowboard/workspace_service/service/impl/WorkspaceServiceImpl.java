@@ -177,6 +177,24 @@ public class WorkspaceServiceImpl implements WorkspaceService {
         return true;
     }
 
+    @Override
+    public CustomPageResponse<WorkspaceResponseDto> getAllWorkspaces(int page, int size, String by, String direction) {
+        Sort sort = direction.equalsIgnoreCase("asc")
+                ? Sort.by(by).ascending()
+                : Sort.by(by).descending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<Workspace> workspacePage = workspaceRepository.findAll(pageable);
+        Page<WorkspaceResponseDto> dtoPage = workspacePage.map(workspaceResponseMapper::mapTo);
+        return new CustomPageResponse<>(dtoPage);
+    }
+
+    @Override
+    public void deleteWorkspaceAsAdmin(Integer workspaceId) {
+        workspaceRepository.delete(getWorkspace(workspaceId));
+        log.info("Admin deleted workspace {}", workspaceId);
+    }
+
     private void validateAccess(Integer workspaceId, Integer userId) {
         Workspace workspace = getWorkspace(workspaceId);
         if(!workspace.getOwnerId().equals(userId)) {

@@ -35,6 +35,10 @@ spring:
       health:
         show-details: always
 
+app:
+  rabbitmq:
+    enabled: ${RABBITMQ_ENABLED:false}
+
 
 eureka:
   client:

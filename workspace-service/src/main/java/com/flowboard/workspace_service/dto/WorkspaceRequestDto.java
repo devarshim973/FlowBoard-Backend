@@ -15,8 +15,8 @@ public class WorkspaceRequestDto {
     private String name;
 
     @Schema(description = "Workspace description", example = "Workspace for managing development tasks")
-    @NotBlank(message = "Name cannot be blank")
-    @Size(min = 2, max = 100, message = "Name must be between 2 to 100 character")
+    @NotBlank(message = "Description cannot be blank")
+    @Size(min = 1, max = 100, message = "Description must be between 1 to 100 character")
     private String description;
 
     /*
@@ -28,7 +28,7 @@ public class WorkspaceRequestDto {
     private Visibility visibility;
 
     @Schema(description = "Workspace logo URL", example = "https://cdn.app.com/logo.png")
-    @NotBlank(message = "Name cannot be blank")
-    @Size(min = 2, max = 100, message = "Name must be between 2 to 100 character")
+    @NotBlank(message = "Logo URL cannot be blank")
+    @Size(min = 2, max = 255, message = "Logo URL must be between 2 to 255 character")
     private String logoUrl;
 }

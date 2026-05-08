@@ -25,8 +25,15 @@ public class NotificationProducerImpl implements NotificationProcedure {
     @Value("${rabbitmq.routing.bulk.key}")
     private String bulkRoutingKey;
 
+    @Value("${app.rabbitmq.enabled:false}")
+    private boolean rabbitmqEnabled;
+
     @Override
     public void sendBulk(BulkNotificationRequestDto message) {
+        if (!rabbitmqEnabled) {
+            log.info("RabbitMQ is disabled; skipping bulk notification publish");
+            return;
+        }
         try {
             log.info("Added a bulk notification in queue");
             rabbitTemplate.convertAndSend(exchange, bulkRoutingKey, message);
@@ -37,6 +44,10 @@ public class NotificationProducerImpl implements NotificationProcedure {
 
     @Override
     public void sendSingle(NotificationRequestDto message) {
+        if (!rabbitmqEnabled) {
+            log.info("RabbitMQ is disabled; skipping single notification publish");
+            return;
+        }
         try {
             log.info("Added a single notification in queue");
             rabbitTemplate.convertAndSend(exchange, singleRoutingKey, message);

@@ -1,8 +1,8 @@
-# <div align="center">FlowBoard Backend</div>
+<h1 align="center">FlowBoard Backend</h1>
 
-<div align="center">
-  <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=24&duration=2800&pause=900&color=2563EB&center=true&vCenter=true&width=980&lines=Microservices+backend+for+FlowBoard;Spring+Boot+%2B+Spring+Cloud+architecture;Auth%2C+boards%2C+cards%2C+comments%2C+notifications+and+payments" alt="FlowBoard backend typing banner" />
-</div>
+<p align="center">
+  <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&weight=600&size=22&duration=2600&pause=1000&color=2563EB&center=true&vCenter=true&repeat=true&width=820&height=48&lines=Spring+Boot+Microservices+for+FlowBoard;Authentication%2C+Boards%2C+Cards+and+Comments;Notifications%2C+Payments+and+Admin+Controls" alt="Typing SVG" />
+</p>
 
 <div align="center">
   <img src="https://img.shields.io/badge/Java-21-0f172a?style=for-the-badge&logo=openjdk&logoColor=f89820" alt="Java badge" />
@@ -12,8 +12,8 @@
 </div>
 
 <p align="center">
-  FlowBoard Backend is a Spring Boot microservices platform that powers authentication, workspace management,
-  boards, lists, cards, comments, notifications, admin operations, and subscription payments behind a unified API gateway.
+  A production-style microservices backend for FlowBoard, built with Spring Boot, Eureka, and API Gateway
+  to power authentication, workspace management, boards, lists, cards, comments, notifications, admin tools, and payments.
 </p>
 
 ---

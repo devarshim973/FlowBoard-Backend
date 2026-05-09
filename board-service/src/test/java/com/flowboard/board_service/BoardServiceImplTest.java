@@ -5,6 +5,7 @@ import com.flowboard.board_service.dto.BoardRequestDto;
 import com.flowboard.board_service.dto.BoardResponseDto;
 import com.flowboard.board_service.dto.BoardUpdateRequestDto;
 import com.flowboard.board_service.entity.Board;
+import com.flowboard.board_service.entity.BoardMember;
 import com.flowboard.board_service.entity.Visibility;
 import com.flowboard.board_service.exception.IllegalOperationException;
 import com.flowboard.board_service.mapper.impl.BoardRequestMapper;
@@ -12,6 +13,7 @@ import com.flowboard.board_service.mapper.impl.BoardResponseMapper;
 import com.flowboard.board_service.repository.BoardMemberRepository;
 import com.flowboard.board_service.repository.BoardRepository;
 import com.flowboard.board_service.service.impl.BoardServiceImpl;
+import org.springframework.data.domain.PageImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -19,9 +21,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.any;
@@ -93,6 +97,18 @@ class BoardServiceImplTest {
 
         assertThrows(IllegalOperationException.class,
                 () -> boardService.createBoard(request, 1));
+    }
+
+    @Test
+    void createBoard_withDuplicateName_throwsException() {
+        BoardRequestDto request = new BoardRequestDto();
+        request.setWorkspaceId(10);
+        request.setName("Board");
+
+        when(workspaceClient.getOwnerId(10)).thenReturn(1);
+        when(boardRepository.existsByNameAndWorkspaceId("Board", 10)).thenReturn(true);
+
+        assertThrows(IllegalOperationException.class, () -> boardService.createBoard(request, 1));
     }
 
     @Test
@@ -206,6 +222,21 @@ class BoardServiceImplTest {
     }
 
     @Test
+    void getBoardById_withPrivateBoardAndMember_returnsDto() {
+        Board board = new Board();
+        board.setVisibility(Visibility.PRIVATE);
+        BoardResponseDto dto = new BoardResponseDto();
+
+        when(boardRepository.findById(1)).thenReturn(Optional.of(board));
+        when(boardMemberRepository.existsByBoardIdAndUserId(1, 2)).thenReturn(true);
+        when(boardResponseMapper.mapTo(board)).thenReturn(dto);
+
+        BoardResponseDto result = boardService.getBoardById(1, 2);
+
+        assertEquals(dto, result);
+    }
+
+    @Test
     void closeBoard_withValidBoard_updatesStatus() {
 
         Board board = new Board();
@@ -236,6 +267,26 @@ class BoardServiceImplTest {
     }
 
     @Test
+    void closeBoard_whenAlreadyClosed_throwsException() {
+        Board board = new Board();
+        board.setCreatedById(1);
+        board.setClosed(true);
+        when(boardRepository.findById(1)).thenReturn(Optional.of(board));
+
+        assertThrows(IllegalOperationException.class, () -> boardService.closeBoard(1, 1));
+    }
+
+    @Test
+    void openBoard_whenAlreadyOpen_throwsException() {
+        Board board = new Board();
+        board.setCreatedById(1);
+        board.setClosed(false);
+        when(boardRepository.findById(1)).thenReturn(Optional.of(board));
+
+        assertThrows(IllegalOperationException.class, () -> boardService.openBoard(1, 1));
+    }
+
+    @Test
     void getWorkspaceId_withValidId_returnsId() {
 
         Board board = new Board();
@@ -263,5 +314,85 @@ class BoardServiceImplTest {
                 boardService.isPrivate(1);
 
         assertEquals(true, result);
+    }
+
+    @Test
+    void getPublicBoardsForWorkspace_whenWorkspacePrivate_throwsException() {
+        when(workspaceClient.isPrivate(10)).thenReturn(true);
+
+        assertThrows(IllegalOperationException.class,
+                () -> boardService.getPublicBoardsForWorkspace(10, 0, 10, "name", "asc"));
+    }
+
+    @Test
+    void getPublicBoardsForWorkspace_whenWorkspacePublic_returnsPage() {
+        Board board = new Board();
+        BoardResponseDto dto = new BoardResponseDto();
+        when(workspaceClient.isPrivate(10)).thenReturn(false);
+        when(boardRepository.findByWorkspaceIdAndVisibility(eq(10), eq(Visibility.PUBLIC), any()))
+                .thenReturn(new PageImpl<>(List.of(board)));
+        when(boardResponseMapper.mapTo(board)).thenReturn(dto);
+
+        var result = boardService.getPublicBoardsForWorkspace(10, 0, 10, "name", "desc");
+
+        assertEquals(1, result.getContent().size());
+    }
+
+    @Test
+    void getPrivateBoardsByWorkspace_returnsPage() {
+        Board board = new Board();
+        BoardResponseDto dto = new BoardResponseDto();
+        when(boardRepository.findPrivateBoardsByWorkspaceAndUser(eq(10), eq(2), any()))
+                .thenReturn(new PageImpl<>(List.of(board)));
+        when(boardResponseMapper.mapTo(board)).thenReturn(dto);
+
+        var result = boardService.getPrivateBoardsByWorkspace(10, 2, 0, 10, "name", "asc");
+
+        assertEquals(1, result.getContent().size());
+    }
+
+    @Test
+    void getPublicBoardsForLoggedUser_whenNotMember_throwsException() {
+        when(workspaceClient.isMember(10, 2)).thenReturn(false);
+
+        assertThrows(IllegalOperationException.class,
+                () -> boardService.getPublicBoardsForLoggedUser(10, 2, 0, 10, "name", "asc"));
+    }
+
+    @Test
+    void getPublicBoardsForLoggedUser_whenMember_returnsPage() {
+        Board board = new Board();
+        BoardResponseDto dto = new BoardResponseDto();
+        when(workspaceClient.isMember(10, 2)).thenReturn(true);
+        when(boardRepository.findByWorkspaceIdAndVisibility(eq(10), eq(Visibility.PUBLIC), any()))
+                .thenReturn(new PageImpl<>(List.of(board)));
+        when(boardResponseMapper.mapTo(board)).thenReturn(dto);
+
+        var result = boardService.getPublicBoardsForLoggedUser(10, 2, 0, 10, "name", "desc");
+
+        assertEquals(1, result.getContent().size());
+    }
+
+    @Test
+    void getAllBoards_returnsPage() {
+        Board board = new Board();
+        BoardResponseDto dto = new BoardResponseDto();
+        when(boardRepository.findAll(any(org.springframework.data.domain.Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(board)));
+        when(boardResponseMapper.mapTo(board)).thenReturn(dto);
+
+        var result = boardService.getAllBoards(0, 10, "name", "asc");
+
+        assertEquals(1, result.getContent().size());
+    }
+
+    @Test
+    void deleteBoardAsAdmin_deletesBoard() {
+        Board board = new Board();
+        when(boardRepository.findById(1)).thenReturn(Optional.of(board));
+
+        boardService.deleteBoardAsAdmin(1);
+
+        verify(boardRepository).delete(board);
     }
 }

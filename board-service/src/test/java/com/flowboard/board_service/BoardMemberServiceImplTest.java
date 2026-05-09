@@ -117,6 +117,43 @@ class BoardMemberServiceImplTest {
     }
 
     @Test
+    void addMember_whenUserNotInWorkspace_throwsException() {
+        Board board = new Board();
+        board.setBoardId(1);
+        board.setCreatedById(1);
+        board.setWorkspaceId(10);
+
+        BoardMemberRequestDto request = new BoardMemberRequestDto();
+        request.setBoardId(1);
+        request.setUserId(2);
+
+        when(boardRepository.findById(1)).thenReturn(Optional.of(board));
+        when(workspaceClient.isMember(10, 2)).thenReturn(false);
+
+        assertThrows(IllegalOperationException.class,
+                () -> boardMemberService.addMember(request, 1));
+    }
+
+    @Test
+    void addMember_whenAlreadyMember_throwsException() {
+        Board board = new Board();
+        board.setBoardId(1);
+        board.setCreatedById(1);
+        board.setWorkspaceId(10);
+
+        BoardMemberRequestDto request = new BoardMemberRequestDto();
+        request.setBoardId(1);
+        request.setUserId(2);
+
+        when(boardRepository.findById(1)).thenReturn(Optional.of(board));
+        when(workspaceClient.isMember(10, 2)).thenReturn(true);
+        when(boardMemberRepository.existsByBoardIdAndUserId(1, 2)).thenReturn(true);
+
+        assertThrows(IllegalOperationException.class,
+                () -> boardMemberService.addMember(request, 1));
+    }
+
+    @Test
     void removeMember_withValidIds_deletesMember() {
 
         Board board = new Board();
@@ -146,6 +183,29 @@ class BoardMemberServiceImplTest {
                 .thenReturn(Optional.of(board));
 
         assertThrows(IllegalOperationException.class,
+                () -> boardMemberService.removeMember(1, 2, 1));
+    }
+
+    @Test
+    void removeMember_whenRemovingOwner_throwsException() {
+        Board board = new Board();
+        board.setCreatedById(1);
+
+        when(boardRepository.findById(1)).thenReturn(Optional.of(board));
+
+        assertThrows(IllegalOperationException.class,
+                () -> boardMemberService.removeMember(1, 1, 1));
+    }
+
+    @Test
+    void removeMember_whenMemberMissing_throwsException() {
+        Board board = new Board();
+        board.setCreatedById(1);
+
+        when(boardRepository.findById(1)).thenReturn(Optional.of(board));
+        when(boardMemberRepository.findByBoardIdAndUserId(1, 2)).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class,
                 () -> boardMemberService.removeMember(1, 2, 1));
     }
 

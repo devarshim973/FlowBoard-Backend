@@ -5,6 +5,7 @@ import com.flowboard.list_service.client.WorkspaceClient;
 import com.flowboard.list_service.dto.TaskListOrderRequestDto;
 import com.flowboard.list_service.dto.TaskListRequestDto;
 import com.flowboard.list_service.dto.TaskListResponseDto;
+import com.flowboard.list_service.dto.TaskListUpdateDto;
 import com.flowboard.list_service.entity.TaskList;
 import com.flowboard.list_service.exception.IllegalOperationException;
 import com.flowboard.list_service.exception.TaskListNotFoundException;
@@ -212,5 +213,153 @@ class TaskListServiceImplTest {
 
         assertThrows(IllegalOperationException.class,
                 () -> taskListService.getPublicTaskList(1));
+    }
+
+    @Test
+    void getTaskListByBoard_returnsMappedList() {
+        TaskList list = getList();
+        TaskListResponseDto dto = new TaskListResponseDto();
+        when(taskListRepository.findByBoardIdAndArchivedFalseOrderByPosition(1)).thenReturn(List.of(list));
+        when(taskListResponseMapper.mapTo(list)).thenReturn(dto);
+
+        List<TaskListResponseDto> result = taskListService.getTaskListByBoard(1, 1);
+
+        assertEquals(1, result.size());
+    }
+
+    @Test
+    void updateTaskList_positive() {
+        TaskList list = getList();
+        TaskListUpdateDto dto = new TaskListUpdateDto();
+        dto.setName("Updated");
+        dto.setColor("blue");
+        TaskListResponseDto response = new TaskListResponseDto();
+        response.setName("Updated");
+
+        when(taskListRepository.findById(1)).thenReturn(Optional.of(list));
+        when(boardClient.isPrivate(1)).thenReturn(false);
+        when(boardClient.getWorkspaceId(1)).thenReturn(10);
+        when(workspaceClient.isMember(10, 1)).thenReturn(true);
+        when(taskListRepository.save(list)).thenReturn(list);
+        when(taskListResponseMapper.mapTo(list)).thenReturn(response);
+
+        TaskListResponseDto result = taskListService.updateTaskList(dto, 1, 1);
+
+        assertEquals("Updated", result.getName());
+    }
+
+    @Test
+    void reorderTaskList_invalidTaskListId_throws() {
+        TaskList list = getList();
+        TaskListOrderRequestDto dto = new TaskListOrderRequestDto();
+        dto.setTaskListId(99);
+        dto.setPosition(1);
+
+        when(boardClient.isPrivate(1)).thenReturn(false);
+        when(boardClient.getWorkspaceId(1)).thenReturn(10);
+        when(workspaceClient.isMember(10, 1)).thenReturn(true);
+        when(taskListRepository.findByBoardIdAndArchivedFalseOrderByPosition(1)).thenReturn(List.of(list));
+
+        assertThrows(IllegalOperationException.class,
+                () -> taskListService.reorderTaskList(1, 1, List.of(dto)));
+    }
+
+    @Test
+    void reorderTaskList_invalidCount_throws() {
+        TaskList list1 = getList();
+        TaskList list2 = new TaskList();
+        list2.setListId(2);
+        list2.setBoardId(1);
+        list2.setPosition(2);
+
+        TaskListOrderRequestDto dto = new TaskListOrderRequestDto();
+        dto.setTaskListId(1);
+        dto.setPosition(1);
+
+        when(boardClient.isPrivate(1)).thenReturn(false);
+        when(boardClient.getWorkspaceId(1)).thenReturn(10);
+        when(workspaceClient.isMember(10, 1)).thenReturn(true);
+        when(taskListRepository.findByBoardIdAndArchivedFalseOrderByPosition(1)).thenReturn(List.of(list1, list2));
+
+        assertThrows(IllegalOperationException.class,
+                () -> taskListService.reorderTaskList(1, 1, List.of(dto)));
+    }
+
+    @Test
+    void archiveTaskList_savesArchivedState() {
+        TaskList list = getList();
+        when(taskListRepository.findById(1)).thenReturn(Optional.of(list));
+        when(boardClient.isPrivate(1)).thenReturn(false);
+        when(boardClient.getWorkspaceId(1)).thenReturn(10);
+        when(workspaceClient.isMember(10, 1)).thenReturn(true);
+
+        taskListService.archiveTaskList(1, 1);
+
+        assertTrue(list.isArchived());
+        verify(taskListRepository).save(list);
+    }
+
+    @Test
+    void unarchiveTaskList_savesState() {
+        TaskList list = getList();
+        list.setArchived(true);
+        when(taskListRepository.findById(1)).thenReturn(Optional.of(list));
+        when(boardClient.isPrivate(1)).thenReturn(false);
+        when(boardClient.getWorkspaceId(1)).thenReturn(10);
+        when(workspaceClient.isMember(10, 1)).thenReturn(true);
+
+        taskListService.unarchiveTaskList(1, 1);
+
+        assertFalse(list.isArchived());
+        verify(taskListRepository).save(list);
+    }
+
+    @Test
+    void deleteTaskList_marksArchivedAndSaves() {
+        TaskList list = getList();
+        when(taskListRepository.findById(1)).thenReturn(Optional.of(list));
+        when(boardClient.isPrivate(1)).thenReturn(false);
+        when(boardClient.getWorkspaceId(1)).thenReturn(10);
+        when(workspaceClient.isMember(10, 1)).thenReturn(true);
+
+        taskListService.deleteTaskList(1, 1);
+
+        assertTrue(list.isArchived());
+        verify(taskListRepository).save(list);
+    }
+
+    @Test
+    void getArchiveTaskLists_returnsMappedList() {
+        TaskList list = getList();
+        list.setArchived(true);
+        TaskListResponseDto dto = new TaskListResponseDto();
+        when(boardClient.isPrivate(1)).thenReturn(false);
+        when(boardClient.getWorkspaceId(1)).thenReturn(10);
+        when(workspaceClient.isPrivate(10)).thenReturn(false);
+        when(taskListRepository.findByBoardIdAndArchivedTrueOrderByPosition(1)).thenReturn(List.of(list));
+        when(taskListResponseMapper.mapTo(list)).thenReturn(dto);
+
+        List<TaskListResponseDto> result = taskListService.getArchiveTaskLists(1, 1);
+
+        assertEquals(1, result.size());
+    }
+
+    @Test
+    void getPublicTaskList_whenBoardPrivate_throws() {
+        when(boardClient.getWorkspaceId(1)).thenReturn(10);
+        when(workspaceClient.isPrivate(10)).thenReturn(false);
+        when(boardClient.isPrivate(1)).thenReturn(true);
+
+        assertThrows(IllegalOperationException.class, () -> taskListService.getPublicTaskList(1));
+    }
+
+    @Test
+    void getBoardId_returnsBoardId() {
+        TaskList list = getList();
+        when(taskListRepository.findById(1)).thenReturn(Optional.of(list));
+
+        Integer result = taskListService.getBoardId(1);
+
+        assertEquals(1, result);
     }
 }

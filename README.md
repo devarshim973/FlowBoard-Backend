@@ -1,7 +1,5 @@
-<h1 align="center">FlowBoard Backend</h1>
-
 <p align="center">
-  <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&weight=600&size=22&duration=2600&pause=1000&color=2563EB&center=true&vCenter=true&repeat=true&width=820&height=48&lines=Spring+Boot+Microservices+for+FlowBoard;Authentication%2C+Boards%2C+Cards+and+Comments;Notifications%2C+Payments+and+Admin+Controls" alt="Typing SVG" />
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:0f172a,35:1d4ed8,70:2563eb,100:38bdf8&height=220&section=header&text=FlowBoard%20Backend&fontSize=42&fontColor=ffffff&animation=fadeIn&fontAlignY=38&desc=Spring%20Boot%20Microservices%20Architecture&descAlignY=58&descSize=18" alt="FlowBoard Backend banner" />
 </p>
 
 <div align="center">

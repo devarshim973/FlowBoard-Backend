@@ -216,8 +216,8 @@ cloudinary-cloud-name=your_cloudinary_name
 cloudinary-api-key=your_cloudinary_key
 cloudinary-api-secret=your_cloudinary_secret
 
-brevo-api-key=your_brevo_api_key
-brevo-sender-mail=your_sender_email
+brevo-api-key=Smtp_key
+brevo-sender-mail=Smtp_sender_email
 
 RABBITMQ_ENABLED=false
 ```

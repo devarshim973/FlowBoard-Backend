@@ -1,0 +1,12 @@
+.git
+.github
+.idea
+.metadata
+.sonarlint
+**/target
+**/.classpath
+**/.project
+**/.settings
+**/bin
+README.md
+

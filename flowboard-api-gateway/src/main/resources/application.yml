@@ -7,8 +7,8 @@ spring:
 
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${redis_host:${REDIS_HOST:localhost}}
+      port: ${redis_port:${REDIS_PORT:6379}}
 
   cloud:
     gateway:
@@ -103,7 +103,7 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${eureka_default_zone:${EUREKA_DEFAULT_ZONE:http://localhost:8761/eureka/}}
     register-with-eureka: true
     fetch-registry: true
   instance:
@@ -111,4 +111,4 @@ eureka:
 
 security:
   jwt:
-    secret: ${jwt-secret-key}
+    secret: ${jwt_secret_key}

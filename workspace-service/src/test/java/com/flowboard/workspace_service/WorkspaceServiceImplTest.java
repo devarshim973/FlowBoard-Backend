@@ -20,6 +20,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
 
 import java.util.List;
@@ -230,6 +231,26 @@ class WorkspaceServiceImplTest {
     }
 
     @Test
+    void getJoinedWorkspaces_whenEmpty_returnsEmptyPage() {
+        PageImpl<WorkspaceMember> memberPage =
+                new PageImpl<>(
+                        List.of(),
+                        PageRequest.of(0, 5),
+                        0
+                );
+
+        when(workspaceMemberRepository.findByUserId(anyInt(), any()))
+                .thenReturn(memberPage);
+
+        CustomPageResponse<WorkspaceResponseDto> result =
+                workspaceService.getJoinedWorkspaces(
+                        1, 0, 5, "workspaceId", "desc"
+                );
+
+        assertEquals(0, result.getContent().size());
+    }
+
+    @Test
     void findById_positive() {
 
         Workspace workspace = getWorkspace();
@@ -264,6 +285,53 @@ class WorkspaceServiceImplTest {
 
         assertEquals(true,
                 workspaceService.checkModificationAccess(1, 1));
+    }
+
+    @Test
+    void checkModificationAccess_negative() {
+        Workspace workspace = getWorkspace();
+        workspace.setOwnerId(9);
+
+        when(workspaceRepository.findById(1))
+                .thenReturn(Optional.of(workspace));
+
+        assertEquals(false,
+                workspaceService.checkModificationAccess(1, 1));
+    }
+
+    @Test
+    void getAllWorkspaces_positive() {
+        PageImpl<Workspace> page =
+                new PageImpl<>(
+                        List.of(getWorkspace()),
+                        PageRequest.of(0, 5),
+                        1
+                );
+
+        when(workspaceRepository.findAll(any(Pageable.class)))
+                .thenReturn(page);
+
+        when(workspaceResponseMapper.mapTo(any(Workspace.class)))
+                .thenReturn(new WorkspaceResponseDto());
+
+        CustomPageResponse<WorkspaceResponseDto> result =
+                workspaceService.getAllWorkspaces(
+                        0, 5, "workspaceId", "desc"
+                );
+
+        assertEquals(1, result.getContent().size());
+    }
+
+    @Test
+    void deleteWorkspaceAsAdmin_positive() {
+        Workspace workspace = getWorkspace();
+
+        when(workspaceRepository.findById(1))
+                .thenReturn(Optional.of(workspace));
+
+        workspaceService.deleteWorkspaceAsAdmin(1);
+
+        verify(workspaceRepository).delete(workspace);
     }
 
     @Test
@@ -323,6 +391,15 @@ class WorkspaceServiceImplTest {
                 .thenReturn(Optional.of(workspace));
 
         assertEquals(true,
+                workspaceService.isPrivate(1));
+    }
+
+    @Test
+    void isPrivate_whenWorkspacePublic_returnsFalse() {
+        when(workspaceRepository.findById(1))
+                .thenReturn(Optional.of(getWorkspace()));
+
+        assertEquals(false,
                 workspaceService.isPrivate(1));
     }
 

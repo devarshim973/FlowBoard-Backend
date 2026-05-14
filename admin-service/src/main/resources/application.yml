@@ -11,9 +11,9 @@ spring:
         enabled: true
 
   datasource:
-    url: jdbc:mysql://localhost:3306/flow_board_auth_service_db
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/flow_board_auth_service_db
     username: root
-    password: ${DB_PASSWORD}
+    password: ${db_password:${DB_PASSWORD:root}}
 
   jpa:
     hibernate:
@@ -30,7 +30,7 @@ management:
 
 security:
   jwt:
-    secret: ${JWT_SECRET_KEY}
+    secret: ${jwt_secret_key:${JWT_SECRET_KEY}}
 
 admin:
   email: devarshim973@gmail.com
@@ -38,14 +38,14 @@ admin:
 
 services:
   workspace:
-    url: http://localhost:8084
+    url: ${workspace_service_url:${WORKSPACE_SERVICE_URL:http://localhost:8084}}
   board:
-    url: http://localhost:8085
+    url: ${board_service_url:${BOARD_SERVICE_URL:http://localhost:8085}}
 
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${eureka_default_zone:${EUREKA_DEFAULT_ZONE:http://localhost:8761/eureka/}}
     register-with-eureka: true
     fetch-registry: true
   instance:

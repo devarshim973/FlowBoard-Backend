@@ -1,13 +1,18 @@
 package com.flowboard.flowboard_api_gateway;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.mockito.MockedStatic;
+import org.springframework.boot.SpringApplication;
 
-@SpringBootTest
 class FlowboardApiGatewayApplicationTests {
 
 	@Test
-	void contextLoads() {
+	void mainShouldDelegateToSpringApplication() {
+		try (MockedStatic<SpringApplication> springApplication = org.mockito.Mockito.mockStatic(SpringApplication.class)) {
+			FlowboardApiGatewayApplication.main(new String[]{"--test"});
+
+			springApplication.verify(() -> SpringApplication.run(FlowboardApiGatewayApplication.class, new String[]{"--test"}));
+		}
 	}
 
 }

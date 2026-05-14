@@ -44,14 +44,13 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
             return chain.filter(exchange);
         }
 
-        if (!exchange.getRequest().getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
+        String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+
+        if (authHeader == null || authHeader.isBlank()) {
             return onError(exchange, "Missing Authorization Header", HttpStatus.UNAUTHORIZED);
         }
 
-        String authHeader = exchange.getRequest().getHeaders()
-                .getFirst(HttpHeaders.AUTHORIZATION);
-
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        if (!authHeader.startsWith("Bearer ")) {
             return onError(exchange, "Invalid Authorization Header", HttpStatus.UNAUTHORIZED);
         }
 

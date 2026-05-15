@@ -3,7 +3,6 @@
 .idea
 .metadata
 .sonarlint
-**/target
 **/.classpath
 **/.project
 **/.settings

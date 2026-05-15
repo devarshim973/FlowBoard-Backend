@@ -5,7 +5,11 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
-@FeignClient(name = "WORKSPACE-SERVICE", url = "${services.workspace.url:http://localhost:8084}", fallback = WorkspaceFallback.class)
+@FeignClient(
+        name = "WORKSPACE-SERVICE",
+        url = "${services.workspace.url:${SERVICES_WORKSPACE_URL:${WORKSPACE_SERVICE_URL:http://localhost:8084}}}",
+        fallback = WorkspaceFallback.class
+)
 public interface WorkspaceClient {
     @GetMapping("/api/v1/workspaces/owner/{id}")
     public Integer getOwnerId(@PathVariable Integer id);

@@ -11,8 +11,6 @@ services:
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
-    ports:
-      - "${MYSQL_HOST_PORT:-3307}:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./docker/mysql/init-multiple-dbs.sql:/docker-entrypoint-initdb.d/init-multiple-dbs.sql:ro
@@ -58,7 +56,8 @@ services:
   flowboard-server:
     build:
       context: .
-      dockerfile: ./flowboard-server/Dockerfile
+      dockerfile: ./Dockerfile
+      target: flowboard-server
     container_name: flowboard-server
     restart: unless-stopped
     ports:
@@ -72,7 +71,8 @@ services:
   auth-service:
     build:
       context: .
-      dockerfile: ./auth-service/Dockerfile
+      dockerfile: ./Dockerfile
+      target: auth-service
     container_name: flowboard-auth-service
     restart: unless-stopped
     env_file:
@@ -92,13 +92,17 @@ services:
   notification-service:
     build:
       context: .
-      dockerfile: ./notification_service/Dockerfile
+      dockerfile: ./Dockerfile
+      target: notification-service
     container_name: flowboard-notification-service
     restart: unless-stopped
     env_file:
       - .env
     environment:
       <<: *service-env
+      SERVICES_AUTH_URL: http://auth-service:8081
+      brevo_api_key: ${brevo_api_key:-disabled}
+      brevo_sender_mail: ${brevo_sender_mail:-no-reply@flowboard.local}
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
       RABBITMQ_USERNAME: guest
@@ -119,13 +123,17 @@ services:
   comment-service:
     build:
       context: .
-      dockerfile: ./comment-service/Dockerfile
+      dockerfile: ./Dockerfile
+      target: comment-service
     container_name: flowboard-comment-service
     restart: unless-stopped
     env_file:
       - .env
     environment:
       <<: *service-env
+      SERVICES_AUTH_URL: http://auth-service:8081
+      SERVICES_CARD_URL: http://card-service:8087
+      SERVICES_NOTIFICATION_URL: http://notification-service:8082
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
       RABBITMQ_USERNAME: guest
@@ -146,13 +154,16 @@ services:
   workspace-service:
     build:
       context: .
-      dockerfile: ./workspace-service/Dockerfile
+      dockerfile: ./Dockerfile
+      target: workspace-service
     container_name: flowboard-workspace-service
     restart: unless-stopped
     env_file:
       - .env
     environment:
       <<: *service-env
+      SERVICES_AUTH_URL: http://auth-service:8081
+      SERVICES_PAYMENT_URL: http://payment-service:8089
     ports:
       - "${WORKSPACE_SERVICE_HOST_PORT:-18084}:8084"
     depends_on:
@@ -166,13 +177,16 @@ services:
   board-service:
     build:
       context: .
-      dockerfile: ./board-service/Dockerfile
+      dockerfile: ./Dockerfile
+      target: board-service
     container_name: flowboard-board-service
     restart: unless-stopped
     env_file:
       - .env
     environment:
       <<: *service-env
+      SERVICES_WORKSPACE_URL: http://workspace-service:8084
+      SERVICES_AUTH_URL: http://auth-service:8081
     ports:
       - "${BOARD_SERVICE_HOST_PORT:-18085}:8085"
     depends_on:
@@ -180,19 +194,24 @@ services:
         condition: service_healthy
       flowboard-server:
         condition: service_started
+      workspace-service:
+        condition: service_started
     networks:
       - flowboard-net
 
   list-service:
     build:
       context: .
-      dockerfile: ./list-service/Dockerfile
+      dockerfile: ./Dockerfile
+      target: list-service
     container_name: flowboard-list-service
     restart: unless-stopped
     env_file:
       - .env
     environment:
       <<: *service-env
+      SERVICES_WORKSPACE_URL: http://workspace-service:8084
+      SERVICES_BOARD_URL: http://board-service:8085
     ports:
       - "${LIST_SERVICE_HOST_PORT:-18086}:8086"
     depends_on:
@@ -200,19 +219,28 @@ services:
         condition: service_healthy
       flowboard-server:
         condition: service_started
+      workspace-service:
+        condition: service_started
+      board-service:
+        condition: service_started
     networks:
       - flowboard-net
 
   card-service:
     build:
       context: .
-      dockerfile: ./card-service/Dockerfile
+      dockerfile: ./Dockerfile
+      target: card-service
     container_name: flowboard-card-service
     restart: unless-stopped
     env_file:
       - .env
     environment:
       <<: *service-env
+      SERVICES_WORKSPACE_URL: http://workspace-service:8084
+      SERVICES_BOARD_URL: http://board-service:8085
+      SERVICES_LIST_URL: http://list-service:8086
+      SERVICES_NOTIFICATION_URL: http://notification-service:8082
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
       RABBITMQ_USERNAME: guest
@@ -227,13 +255,22 @@ services:
         condition: service_healthy
       flowboard-server:
         condition: service_started
+      workspace-service:
+        condition: service_started
+      board-service:
+        condition: service_started
+      list-service:
+        condition: service_started
+      notification-service:
+        condition: service_started
     networks:
       - flowboard-net
 
   payment-service:
     build:
       context: .
-      dockerfile: ./payment-service/Dockerfile
+      dockerfile: ./Dockerfile
+      target: payment-service
     container_name: flowboard-payment-service
     restart: unless-stopped
     env_file:
@@ -253,15 +290,16 @@ services:
   admin-service:
     build:
       context: .
-      dockerfile: ./admin-service/Dockerfile
+      dockerfile: ./Dockerfile
+      target: admin-service
     container_name: flowboard-admin-service
     restart: unless-stopped
     env_file:
       - .env
     environment:
       <<: *service-env
-      WORKSPACE_SERVICE_URL: http://workspace-service:8084
-      BOARD_SERVICE_URL: http://board-service:8085
+      SERVICES_WORKSPACE_URL: http://workspace-service:8084
+      SERVICES_BOARD_URL: http://board-service:8085
     ports:
       - "${ADMIN_SERVICE_HOST_PORT:-18091}:8091"
     depends_on:
@@ -279,7 +317,8 @@ services:
   flowboard-api-gateway:
     build:
       context: .
-      dockerfile: ./flowboard-api-gateway/Dockerfile
+      dockerfile: ./Dockerfile
+      target: flowboard-api-gateway
     container_name: flowboard-api-gateway
     restart: unless-stopped
     env_file:
@@ -324,3 +363,4 @@ volumes:
 networks:
   flowboard-net:
     driver: bridge
+

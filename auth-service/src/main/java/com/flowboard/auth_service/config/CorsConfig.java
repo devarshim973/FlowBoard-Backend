@@ -1,23 +1,8 @@
 package com.flowboard.auth_service.config;
 
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.*;
-
-@Configuration
-public class CorsConfig {
-
-    @Bean
-    public WebMvcConfigurer corsConfigurer() {
-        return new WebMvcConfigurer() {
-            @Override
-            public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**")
-                        .allowedOrigins("http://localhost:5173")
-                        .allowedMethods("*")
-                        .allowedHeaders("*")
-                        .allowCredentials(true);
-            }
-        };
+// CORS is handled at the API gateway for browser requests.
+// Keeping another MVC CORS config here causes duplicate Access-Control-Allow-Origin headers.
+public final class CorsConfig {
+    private CorsConfig() {
     }
 }

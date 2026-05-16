@@ -1,7 +1,7 @@
 x-service-env: &service-env
   MYSQL_HOST: mysql
   MYSQL_PORT: 3306
-  DB_PASSWORD: ${DB_PASSWORD:-root}
+  DB_PASSWORD: ${DB_PASSWORD}
   EUREKA_DEFAULT_ZONE: http://flowboard-server:8761/eureka/
 
 services:
@@ -10,7 +10,7 @@ services:
     container_name: flowboard-mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
       - ./docker/mysql/init-multiple-dbs.sql:/docker-entrypoint-initdb.d/init-multiple-dbs.sql:ro
@@ -47,21 +47,21 @@ services:
       - "${RABBITMQ_MANAGEMENT_HOST_PORT:-15673}:15672"
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 12
+      interval: 30s
+      timeout: 60s
+      retries: 20
+      start_period: 20m
     networks:
       - flowboard-net
 
   flowboard-server:
     build:
-      context: .
-      dockerfile: ./Dockerfile
-      target: flowboard-server
+      context: ./flowboard-server
+      dockerfile: Dockerfile
     container_name: flowboard-server
     restart: unless-stopped
     ports:
-      - "${EUREKA_HOST_PORT:-18761}:8761"
+      - "${EUREKA_HOST_PORT:-8761}:8761"
     depends_on:
       mysql:
         condition: service_healthy
@@ -70,9 +70,8 @@ services:
 
   auth-service:
     build:
-      context: .
-      dockerfile: ./Dockerfile
-      target: auth-service
+      context: ./auth-service
+      dockerfile: Dockerfile
     container_name: flowboard-auth-service
     restart: unless-stopped
     env_file:
@@ -91,9 +90,8 @@ services:
 
   notification-service:
     build:
-      context: .
-      dockerfile: ./Dockerfile
-      target: notification-service
+      context: ./notification_service
+      dockerfile: Dockerfile
     container_name: flowboard-notification-service
     restart: unless-stopped
     env_file:
@@ -114,7 +112,7 @@ services:
       mysql:
         condition: service_healthy
       rabbitmq:
-        condition: service_healthy
+        condition: service_started
       flowboard-server:
         condition: service_started
     networks:
@@ -122,9 +120,8 @@ services:
 
   comment-service:
     build:
-      context: .
-      dockerfile: ./Dockerfile
-      target: comment-service
+      context: ./comment-service
+      dockerfile: Dockerfile
     container_name: flowboard-comment-service
     restart: unless-stopped
     env_file:
@@ -145,7 +142,7 @@ services:
       mysql:
         condition: service_healthy
       rabbitmq:
-        condition: service_healthy
+        condition: service_started
       flowboard-server:
         condition: service_started
     networks:
@@ -153,9 +150,8 @@ services:
 
   workspace-service:
     build:
-      context: .
-      dockerfile: ./Dockerfile
-      target: workspace-service
+      context: ./workspace-service
+      dockerfile: Dockerfile
     container_name: flowboard-workspace-service
     restart: unless-stopped
     env_file:
@@ -176,9 +172,8 @@ services:
 
   board-service:
     build:
-      context: .
-      dockerfile: ./Dockerfile
-      target: board-service
+      context: ./board-service
+      dockerfile: Dockerfile
     container_name: flowboard-board-service
     restart: unless-stopped
     env_file:
@@ -201,9 +196,8 @@ services:
 
   list-service:
     build:
-      context: .
-      dockerfile: ./Dockerfile
-      target: list-service
+      context: ./list-service
+      dockerfile: Dockerfile
     container_name: flowboard-list-service
     restart: unless-stopped
     env_file:
@@ -228,9 +222,8 @@ services:
 
   card-service:
     build:
-      context: .
-      dockerfile: ./Dockerfile
-      target: card-service
+      context: ./card-service
+      dockerfile: Dockerfile
     container_name: flowboard-card-service
     restart: unless-stopped
     env_file:
@@ -252,7 +245,7 @@ services:
       mysql:
         condition: service_healthy
       rabbitmq:
-        condition: service_healthy
+        condition: service_started
       flowboard-server:
         condition: service_started
       workspace-service:
@@ -268,9 +261,8 @@ services:
 
   payment-service:
     build:
-      context: .
-      dockerfile: ./Dockerfile
-      target: payment-service
+      context: ./payment-service
+      dockerfile: Dockerfile
     container_name: flowboard-payment-service
     restart: unless-stopped
     env_file:
@@ -289,9 +281,8 @@ services:
 
   admin-service:
     build:
-      context: .
-      dockerfile: ./Dockerfile
-      target: admin-service
+      context: ./admin-service
+      dockerfile: Dockerfile
     container_name: flowboard-admin-service
     restart: unless-stopped
     env_file:
@@ -316,9 +307,8 @@ services:
 
   flowboard-api-gateway:
     build:
-      context: .
-      dockerfile: ./Dockerfile
-      target: flowboard-api-gateway
+      context: ./flowboard-api-gateway
+      dockerfile: Dockerfile
     container_name: flowboard-api-gateway
     restart: unless-stopped
     env_file:
@@ -363,4 +353,3 @@ volumes:
 networks:
   flowboard-net:
     driver: bridge
-

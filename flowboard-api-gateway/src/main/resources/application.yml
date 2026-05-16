@@ -88,18 +88,6 @@ spring:
           predicates:
             - Path=/api/v1/subscriptions/**
 
-
-  management:
-    endpoints:
-      web:
-        exposure:
-          include: "*"
-
-    endpoint:
-      health:
-        show-details: always
-
-
 eureka:
   client:
     service-url:
@@ -112,3 +100,12 @@ eureka:
 security:
   jwt:
     secret: ${jwt_secret_key}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always

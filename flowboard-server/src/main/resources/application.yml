@@ -1,13 +1,29 @@
+server:
+  port: 8761
+
 spring:
   application:
     name: flowboard-server
 
-server:
-  port: 8761
-
 eureka:
+  instance:
+    hostname: flowboard-server
+
   client:
     register-with-eureka: false
     fetch-registry: false
-  instance:
-    prefer-ip-address: true
+
+  server:
+    enable-self-preservation: true
+    eviction-interval-timer-in-ms: 60000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+logging:
+  level:
+    com.netflix.eureka: INFO
+    com.netflix.discovery: INFO

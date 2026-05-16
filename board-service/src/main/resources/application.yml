@@ -19,17 +19,6 @@ spring:
     hibernate:
       ddl-auto: update
 
-  management:
-    endpoints:
-      web:
-        exposure:
-          include: "*"
-
-    endpoint:
-      health:
-        show-details: always
-
-
 eureka:
   client:
     service-url:
@@ -47,3 +36,12 @@ resilience4j:
         failureRateThreshold: 50
         waitDurationInOpenState: 10s
         permittedNumberOfCallsInHalfOpenState: 3
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always

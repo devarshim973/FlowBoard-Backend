@@ -24,17 +24,6 @@ spring:
     username: ${RABBITMQ_USERNAME:guest}
     password: ${RABBITMQ_PASSWORD:guest}
 
-
-  management:
-    endpoints:
-      web:
-        exposure:
-          include: "*"
-
-    endpoint:
-      health:
-        show-details: always
-
 app:
   rabbitmq:
     enabled: ${RABBITMQ_ENABLED:false}
@@ -71,3 +60,12 @@ resilience4j:
         failureRateThreshold: 50
         waitDurationInOpenState: 10s
         permittedNumberOfCallsInHalfOpenState: 3
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always

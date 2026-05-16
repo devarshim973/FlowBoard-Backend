@@ -134,14 +134,15 @@ class CommentInfrastructureTest {
 
     @Test
     void attachmentMappersMapBothDirections() {
-        AttachmentRequestDto requestDto = AttachmentRequestDto.builder()
-                .cardId(4)
-                .uploaderId(9)
-                .build();
+        AttachmentRequestDto requestDto = new AttachmentRequestDto();
+        requestDto.setCardId(4);
+        requestDto.setCommentId(7);
+        requestDto.setUploaderId(9);
 
         AttachmentRequestMapper requestMapper = new AttachmentRequestMapper(modelMapper);
         Attachment attachment = requestMapper.mapTo(requestDto);
         assertEquals(4, attachment.getCardId());
+        assertEquals(7, attachment.getCommentId());
         assertEquals(9, attachment.getUploaderId());
 
         Attachment entity = new Attachment();
@@ -226,7 +227,9 @@ class CommentInfrastructureTest {
         assertEquals("10", AppConstants.size);
         assertEquals("commentId", AppConstants.sortBy);
         assertEquals("asc", AppConstants.direction);
-        assertEquals(1024L, AppConstants.maxFileSize);
-        assertEquals(List.of("application/pdf"), AppConstants.allowedFileFormat);
+        assertEquals(10240L, AppConstants.maxFileSize);
+        assertTrue(AppConstants.allowedFileFormat.contains("application/pdf"));
+        assertTrue(AppConstants.allowedFileFormat.contains("image/png"));
+        assertTrue(AppConstants.allowedFileFormat.contains("application/vnd.openxmlformats-officedocument.wordprocessingml.document"));
     }
 }

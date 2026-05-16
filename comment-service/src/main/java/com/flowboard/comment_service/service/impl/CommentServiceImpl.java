@@ -1,13 +1,14 @@
 package com.flowboard.comment_service.service.impl;
 
 import com.flowboard.comment_service.dto.CommentRequestDto;
+import com.flowboard.comment_service.dto.AttachmentResponseDto;
 import com.flowboard.comment_service.dto.CommentResponseDto;
 import com.flowboard.comment_service.dto.CommentUpdateDto;
 import com.flowboard.comment_service.entity.Comment;
 import com.flowboard.comment_service.exception.CommentNotFoundException;
-import com.flowboard.comment_service.mapper.Mapper;
 import com.flowboard.comment_service.mapper.impl.CommentRequestMapper;
 import com.flowboard.comment_service.mapper.impl.CommentResponseMapper;
+import com.flowboard.comment_service.repository.AttachmentRepository;
 import com.flowboard.comment_service.repository.CommentRepository;
 import com.flowboard.comment_service.service.CommentService;
 import com.flowboard.comment_service.service.NotificationService;
@@ -34,6 +35,7 @@ who are present in mentioned list
 @RequiredArgsConstructor
 @Slf4j
 public class CommentServiceImpl implements CommentService {
+    private final AttachmentRepository attachmentRepository;
     private final CommentRepository commentRepository;
     private final CommentRequestMapper commentRequestMapper;
     private final CommentResponseMapper commentResponseMapper;
@@ -46,7 +48,7 @@ public class CommentServiceImpl implements CommentService {
         Comment savedComment = commentRepository.save(comment);
         notificationService.sendNotification(commentRequestDto.getCardId(), commentRequestDto.getContent(), commentRequestDto.getAuthorId());
         log.info("Comment created with id {}", savedComment.getCommentId());
-        return commentResponseMapper.mapTo(savedComment);
+        return mapCommentResponse(savedComment);
     }
 
     @Override
@@ -64,7 +66,7 @@ public class CommentServiceImpl implements CommentService {
         Page<Comment> commentPage = commentRepository.findByCardId(cardId, pageable);
 
         Page<CommentResponseDto> commentResponseDtoPage = commentPage
-                .map(commentResponseMapper::mapTo);
+                .map(this::mapCommentResponse);
 
         CustomPageResponse<CommentResponseDto> response =
                 new CustomPageResponse<>(commentResponseDtoPage);
@@ -74,7 +76,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public CommentResponseDto getCommentById(Integer commentId) {
-        return commentResponseMapper.mapTo(getComment(commentId));
+        return mapCommentResponse(getComment(commentId));
     }
 
     @Override
@@ -93,7 +95,7 @@ public class CommentServiceImpl implements CommentService {
                 .findByParentCommentId(commentId, pageable);
 
         Page<CommentResponseDto> commentResponseDtoPage = commentPage
-                .map(commentResponseMapper::mapTo);
+                .map(this::mapCommentResponse);
 
         CustomPageResponse<CommentResponseDto> response =
                 new CustomPageResponse<>(commentResponseDtoPage);
@@ -112,7 +114,7 @@ public class CommentServiceImpl implements CommentService {
         Comment savedComment = commentRepository.save(comment);
         log.info("Comment updated with id {}", savedComment.getCommentId());
 
-        return commentResponseMapper.mapTo(savedComment);
+        return mapCommentResponse(savedComment);
     }
 
     @Override
@@ -124,6 +126,7 @@ public class CommentServiceImpl implements CommentService {
     public void deleteComment(Integer commentId) {
         log.info("Delete comment requested for comment {}", commentId);
         Comment comment = getComment(commentId);
+        attachmentRepository.deleteByCommentId(commentId);
         commentRepository.delete(comment);
         log.info("Comment deleted with id {}", commentId);
     }
@@ -131,5 +134,25 @@ public class CommentServiceImpl implements CommentService {
     private Comment getComment(Integer commentId) {
         return commentRepository.findById(commentId)
                 .orElseThrow(() -> new CommentNotFoundException("Comment not found with id " + commentId));
+    }
+
+    private CommentResponseDto mapCommentResponse(Comment comment) {
+        CommentResponseDto response = commentResponseMapper.mapTo(comment);
+        response.setAttachments(
+                attachmentRepository.findByCommentId(comment.getCommentId()).stream()
+                        .map(attachment -> AttachmentResponseDto.builder()
+                                .attachmentId(attachment.getAttachmentId())
+                                .cardId(attachment.getCardId())
+                                .commentId(attachment.getCommentId())
+                                .uploaderId(attachment.getUploaderId())
+                                .fileName(attachment.getFileName())
+                                .fileUrl(attachment.getFileUrl())
+                                .fileType(attachment.getFileType())
+                                .sizeKb(attachment.getSizeKb())
+                                .uploadedAt(attachment.getUploadedAt())
+                                .build())
+                        .toList()
+        );
+        return response;
     }
 }

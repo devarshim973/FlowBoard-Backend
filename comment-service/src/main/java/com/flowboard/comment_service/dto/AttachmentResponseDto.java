@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 public class AttachmentResponseDto {
     private Integer attachmentId;
     private Integer cardId;
+    private Integer commentId;
     private Integer uploaderId;
 
     private String fileName;

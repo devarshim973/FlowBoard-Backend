@@ -6,6 +6,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 public class CommentResponseDto {
@@ -20,6 +21,8 @@ public class CommentResponseDto {
     private Boolean isDeleted;
 
     private Integer parentCommentId;
+
+    private List<AttachmentResponseDto> attachments;
 
     private LocalDateTime createdAt;
 

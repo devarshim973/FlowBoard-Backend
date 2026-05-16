@@ -11,5 +11,7 @@ public interface AttachmentService {
 
     public List<AttachmentResponseDto> getAttachmentsByCard(Integer cardId);
 
+    public List<AttachmentResponseDto> getAttachmentsByComment(Integer commentId);
+
     public void deleteAttachment(Integer attachmentId);
 }

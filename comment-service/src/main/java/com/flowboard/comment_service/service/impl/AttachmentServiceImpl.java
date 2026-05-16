@@ -6,7 +6,6 @@ import com.flowboard.comment_service.dto.AttachmentResponseDto;
 import com.flowboard.comment_service.entity.Attachment;
 import com.flowboard.comment_service.exception.AttachmentNotFoundException;
 import com.flowboard.comment_service.exception.FileException;
-import com.flowboard.comment_service.mapper.Mapper;
 import com.flowboard.comment_service.mapper.impl.AttachmentRequestMapper;
 import com.flowboard.comment_service.mapper.impl.AttachmentResponseMapper;
 import com.flowboard.comment_service.repository.AttachmentRepository;
@@ -50,7 +49,7 @@ public class AttachmentServiceImpl implements AttachmentService {
             // input optional like folder and other things empty for now
             Map<String, Object> options = new HashMap<>();
             options.put("folder", "flowboard/attachments");
-            options.put("resource_type", "raw");  // Use "raw" for PDFs
+            options.put("resource_type", "auto");
             options.put("access_mode", "public");  // Make URLs publicly accessible
 
 
@@ -86,6 +85,13 @@ public class AttachmentServiceImpl implements AttachmentService {
     }
 
     @Override
+    public List<AttachmentResponseDto> getAttachmentsByComment(Integer commentId) {
+        return attachmentRepository.findByCommentId(commentId).stream()
+                .map(attachmentResponseMapper::mapTo)
+                .toList();
+    }
+
+    @Override
     @Transactional
     public void deleteAttachment(Integer attachmentId) {
         log.info("Delete attachment requested for attachment {}", attachmentId);
@@ -93,7 +99,7 @@ public class AttachmentServiceImpl implements AttachmentService {
                 .orElseThrow(() -> new AttachmentNotFoundException("Attachment not found with id " + attachmentId));
         try{
             Map<String, Object> options = new HashMap<>();
-            options.put("resource_type", "raw");
+            options.put("resource_type", "auto");
             cloudinary.uploader().destroy(attachment.getPublicId(), options);
             attachmentRepository.deleteByAttachmentId(attachmentId);
             log.info("Attachment deleted with id {}", attachmentId);

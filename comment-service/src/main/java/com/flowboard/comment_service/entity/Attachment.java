@@ -21,6 +21,7 @@ public class Attachment {
     private Integer attachmentId;
 
     private Integer cardId;
+    private Integer commentId;
     private Integer uploaderId;
 
     private String fileName;

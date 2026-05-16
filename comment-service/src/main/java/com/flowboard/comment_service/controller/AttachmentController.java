@@ -27,12 +27,12 @@ public class AttachmentController {
     @PostMapping("/upload")
     public ResponseEntity<AttachmentResponseDto> upload(@RequestParam("file") MultipartFile file,
                                                         @RequestParam Integer cardId,
+                                                        @RequestParam(required = false) Integer commentId,
                                                         @RequestParam Integer uploaderId) {
-        AttachmentRequestDto attachmentRequestDto = AttachmentRequestDto
-                .builder()
-                .cardId(cardId)
-                .uploaderId(uploaderId)
-                .build();
+        AttachmentRequestDto attachmentRequestDto = new AttachmentRequestDto();
+        attachmentRequestDto.setCardId(cardId);
+        attachmentRequestDto.setCommentId(commentId);
+        attachmentRequestDto.setUploaderId(uploaderId);
 
         return ResponseEntity.status(HttpStatus.OK)
                 .body(attachmentService.uploadAttachment(file, attachmentRequestDto));
@@ -44,6 +44,14 @@ public class AttachmentController {
     public ResponseEntity<List<AttachmentResponseDto>> getByCard(@PathVariable Integer cardId) {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(attachmentService.getAttachmentsByCard(cardId));
+    }
+
+    @Operation(summary = "Get attachments by comment", description = "Returns all attachments of given comment")
+    @ApiResponse(responseCode = "200", description = "Attachments fetched successfully")
+    @GetMapping("/comment/{commentId}")
+    public ResponseEntity<List<AttachmentResponseDto>> getByComment(@PathVariable Integer commentId) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(attachmentService.getAttachmentsByComment(commentId));
     }
 
     @Operation(summary = "Delete attachment", description = "Deletes attachment by ID")

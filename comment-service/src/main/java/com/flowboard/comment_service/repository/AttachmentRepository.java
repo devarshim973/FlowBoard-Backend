@@ -10,7 +10,11 @@ import java.util.Optional;
 public interface AttachmentRepository extends JpaRepository<Attachment, Integer> {
     List<Attachment> findByCardId(Integer cardId);
 
+    List<Attachment> findByCommentId(Integer commentId);
+
     Optional<Attachment> findByAttachmentId(Integer attachmentId);
 
     void deleteByAttachmentId(Integer attachmentId);
+
+    void deleteByCommentId(Integer commentId);
 }

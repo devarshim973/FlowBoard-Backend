@@ -14,9 +14,17 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+import java.util.Set;
+
 @Component
 public class AuthenticationFilter implements GlobalFilter, Ordered {
     private static final Logger log = LoggerFactory.getLogger(AuthenticationFilter.class);
+    private static final Set<String> ALLOWED_ORIGINS = Set.of(
+            "http://localhost:5173",
+            "http://localhost:4200",
+            "https://flow-board-frontend-sage.vercel.app",
+            "https://flowboard-application.duckdns.org"
+    );
 
     private final RouteValidator routeValidator;
     private final JwtUtil jwtUtil;
@@ -33,8 +41,8 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
         HttpMethod method = exchange.getRequest().getMethod();
 
         if (method == HttpMethod.OPTIONS) {
-            log.info("Preflight request - skipping auth validation");
-            return chain.filter(exchange);
+            log.info("Preflight request - returning gateway CORS response");
+            return handlePreflight(exchange);
         }
 
         String path = exchange.getRequest().getURI().getPath();
@@ -86,6 +94,34 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
     private Mono<Void> onError(ServerWebExchange exchange, String err, HttpStatus status) {
         log.info("Invalid token");
         exchange.getResponse().setStatusCode(status);
+        return exchange.getResponse().setComplete();
+    }
+
+    private Mono<Void> handlePreflight(ServerWebExchange exchange) {
+        String origin = exchange.getRequest().getHeaders().getOrigin();
+
+        if (origin != null && ALLOWED_ORIGINS.contains(origin)) {
+            exchange.getResponse().getHeaders().set(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, origin);
+            exchange.getResponse().getHeaders().set(HttpHeaders.VARY, "Origin");
+            exchange.getResponse().getHeaders().set(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
+            exchange.getResponse().getHeaders().set(
+                    HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS,
+                    "GET,POST,PUT,PATCH,DELETE,OPTIONS"
+            );
+
+            String requestedHeaders = exchange.getRequest()
+                    .getHeaders()
+                    .getFirst(HttpHeaders.ACCESS_CONTROL_REQUEST_HEADERS);
+
+            exchange.getResponse().getHeaders().set(
+                    HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS,
+                    requestedHeaders == null || requestedHeaders.isBlank()
+                            ? "Authorization,Content-Type,X-User-Id,X-User-Role,X-User-Name"
+                            : requestedHeaders
+            );
+        }
+
+        exchange.getResponse().setStatusCode(HttpStatus.OK);
         return exchange.getResponse().setComplete();
     }
 

@@ -19,6 +19,12 @@ spring:
     hibernate:
       ddl-auto: update
 
+app:
+  workspace-limits:
+    free: 3
+    paid: 10
+    paid-unlimited: true
+
 
 
 management:

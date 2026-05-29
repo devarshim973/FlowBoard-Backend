@@ -30,22 +30,34 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class WorkspaceServiceImpl implements WorkspaceService {
-    private static final long FREE_WORKSPACE_LIMIT = 3;
-
     private final WorkspaceRepository workspaceRepository;
     private final WorkspaceRequestMapper workspaceRequestMapper;
     private final WorkspaceResponseMapper workspaceResponseMapper;
     private final WorkspaceMemberRepository workspaceMemberRepository;
     private final PaymentClient paymentClient;
+    private final org.springframework.core.env.Environment environment;
 
     @Override
     public WorkspaceResponseDto createWorkspace(WorkspaceRequestDto workspaceRequestDto, Integer userId) {
         log.info("Create workspace requested by user {}", userId);
         long ownedWorkspaceCount = workspaceRepository.countByOwnerId(userId);
-        if (ownedWorkspaceCount >= FREE_WORKSPACE_LIMIT && !paymentClient.hasActiveSubscription(userId)) {
+        long freeWorkspaceLimit = getWorkspaceLimit("app.workspace-limits.free", 3);
+        long paidWorkspaceLimit = getWorkspaceLimit("app.workspace-limits.paid", 10);
+        boolean unlimitedPaidWorkspaces = Boolean.parseBoolean(
+                environment.getProperty("app.workspace-limits.paid-unlimited", "false")
+        );
+        boolean hasActiveSubscription = paymentClient.hasActiveSubscription(userId);
+        long effectiveLimit = hasActiveSubscription
+                ? (unlimitedPaidWorkspaces ? Long.MAX_VALUE : paidWorkspaceLimit)
+                : freeWorkspaceLimit;
+
+        if (ownedWorkspaceCount >= effectiveLimit) {
+            if (hasActiveSubscription && !unlimitedPaidWorkspaces) {
+                throw new IllegalOperationException("Workspace limit reached. Premium users can create only 10 workspaces.");
+            }
             throw new IllegalOperationException("Workspace limit reached. Upgrade to create more than 3 workspaces.");
         }
-
+       
         Workspace workspace = workspaceRequestMapper.mapTo(workspaceRequestDto);
         workspace.setOwnerId(userId);
 
@@ -63,6 +75,10 @@ public class WorkspaceServiceImpl implements WorkspaceService {
         workspaceMemberRepository.save(owner);
         log.info("Workspace created with id {}", savedWorkspace.getWorkspaceId());
         return workspaceResponseMapper.mapTo(savedWorkspace);
+    }
+
+    private long getWorkspaceLimit(String propertyKey, long defaultValue) {
+        return Long.parseLong(environment.getProperty(propertyKey, String.valueOf(defaultValue)));
     }
 
     @Override

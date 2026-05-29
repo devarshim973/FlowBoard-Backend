@@ -48,6 +48,7 @@ class UserControllerTest {
 
         mockMvc.perform(get("/api/v1/user/user-email/john@gmail.com"))
                 .andExpect(status().isOk())
+
                 .andExpect(jsonPath("$.email").value("john@gmail.com"));
     }
 
